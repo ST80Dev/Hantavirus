@@ -1,5 +1,5 @@
 {
-  "ts": 1746957600000,
+  "ts": 1778497063430,
   "cases": 10,
   "deaths": 3,
   "monitored": 147,
@@ -23,13 +23,25 @@
   "new_evacuations": [],
   "new_flights": [
     {
-      "from": [-16.5, 28.1],
-      "to": [-95.91, 41.12],
+      "from": [
+        -16.5,
+        28.1
+      ],
+      "to": [
+        -95.91,
+        41.12
+      ],
       "label": "Tenerife → Offutt AFB (Omaha) · Volo Department of State USA · 18 passeggeri"
     },
     {
-      "from": [-16.5, 28.1],
-      "to": [2.44, 48.97],
+      "from": [
+        -16.5,
+        28.1
+      ],
+      "to": [
+        2.44,
+        48.97
+      ],
       "label": "Tenerife → Le Bourget (Parigi) · Rimpatrio Francia · 1 passeggero sintomatico"
     }
   ],
