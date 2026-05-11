@@ -12,8 +12,12 @@ ECDC, ISS, CDC per ogni aggiornamento).
   esterne caricate da CDN.
 - **Step-by-step**: per ogni modifica strutturale, mostra il piano e chiedi
   conferma prima di procedere. Niente refactor massivi senza approvazione.
-- **Commit**: diretto su `main`, messaggi concisi in italiano, prefisso tipo
-  `feat:`, `fix:`, `chore:`, `docs:`.
+- **Commit**: messaggi concisi in italiano, prefisso tipo `feat:`, `fix:`,
+  `chore:`, `docs:`.
+- **Workflow branch/PR**: lavora su branch dedicato (es. quello assegnato dal
+  task), e per ogni pacchetto di modifiche sostanziali apri una PR verso `main`.
+  Simone fa il merge manuale e poi assegna il branch successivo. Non pushare
+  mai direttamente su `main`.
 - **Test fisici**: dopo ogni modifica al rendering, ricorda a Simone di
   ricaricare la pagina su mobile (Chrome Android via GitHub Pages) per testare.
   Il file è stato debuggato a lungo per strict-mode mobile.
@@ -21,8 +25,10 @@ ECDC, ISS, CDC per ogni aggiornamento).
 ## Struttura file
 
 ```
-hantavirus_monitor.html   # Dashboard standalone (~325 KB, ~2400 righe)
+index.html                # Dashboard standalone (~325 KB, ~2400 righe)
                           # D3 + TopoJSON bundled, niente import esterni
+                          # Servita da GitHub Pages (rename da hantavirus_monitor.html)
+.nojekyll                 # Disattiva processing Jekyll su GitHub Pages
 .github/workflows/        # GitHub Actions (da creare)
 data.json                 # Stato corrente (da creare, generato da workflow)
 BRIEFING.md               # Contesto completo del progetto e decisioni prese
