@@ -29,8 +29,13 @@ index.html                # Dashboard standalone (~325 KB, ~2400 righe)
                           # D3 + TopoJSON bundled, niente import esterni
                           # Servita da GitHub Pages (rename da hantavirus_monitor.html)
 .nojekyll                 # Disattiva processing Jekyll su GitHub Pages
-.github/workflows/        # GitHub Actions (da creare)
-data.json                 # Stato corrente (da creare, generato da workflow)
+data.json                 # Stato corrente, generato dal workflow ogni 6h
+.github/workflows/
+  update-data.yml         # Cron 6h + manuale: RSS + Ollama → data.json
+scripts/
+  update_data.py          # Fetch RSS WHO/ECDC/ISS + chiama Ollama Cloud
+  validate_data.py        # Validatore schema (gate finale workflow)
+  requirements.txt        # feedparser, requests
 BRIEFING.md               # Contesto completo del progetto e decisioni prese
 NEWS_UPDATE_2026-05-11.md # Aggiornamenti reali post-creazione dashboard
 ```
@@ -102,3 +107,13 @@ Colori validi: `#ef4444` (rosso/confermato), `#f59e0b` (ambra/sospetto),
 
 WHO DON, ECDC, ISS+EpiCentro, Min. Salute IT, CDC, PAHO, RIVM (NL), RKI (DE),
 UKHSA (UK), SPF (FR), UFSP (CH), Min. Sanidad ES, Min. Salud AR.
+
+## Workflow GitHub Actions — update-data.yml
+
+- Schedulato ogni 6 ore (cron UTC `0 0,6,12,18 * * *` → 02/08/14/20 CEST)
+  + trigger manuale (`workflow_dispatch`)
+- Secret richiesto: `OLLAMA_API_KEY` (Settings → Secrets and variables → Actions)
+- Modello: `gpt-oss:120b-cloud` (override via env `OLLAMA_MODEL` se necessario)
+- Pipeline: RSS fetch → prompt con stato precedente → Ollama → validate → commit
+- Fallback: se validate fallisce, niente commit → dashboard mostra ultimo
+  data.json valido (mai stato rotto)

@@ -1,9 +1,9 @@
 {
   "ts": 1746957600000,
-  "cases": 9,
+  "cases": 10,
   "deaths": 3,
-  "monitored": 9,
-  "cfr": 33.3,
+  "monitored": 147,
+  "cfr": 30.0,
   "ship": "Tenerife – Port of Granadilla (sbarco in corso)",
   "defcon": 4,
   "country_updates": [
@@ -54,7 +54,7 @@
     },
     {
       "date": "11 mag 2026",
-      "text": "🌐 Casi totali confermati/probabili: 9 (CFR ~33%). Sbarchi MV Hondius proseguono · ministra Mónica García: «operazione senza precedenti».",
+      "text": "🌐 WHO DON599: 10 casi totali (confermati + probabili), 3 decessi (CFR ~30%). 147 persone monitorate a bordo (87 passeggeri + 60 crew). Sbarchi MV Hondius proseguono.",
       "type": "w",
       "tag": "UPDATE"
     }
