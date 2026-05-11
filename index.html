@@ -1023,7 +1023,7 @@ footer {
 
 <!-- FOOTER -->
 <footer>
-  <div class="ft-l">HANTAVIRUS GLOBAL THREAT MONITOR · v3.1 · Auto-aggiornamento ogni 4h · Fonti ufficiali EU/ITA/INT</div>
+  <div class="ft-l">HANTAVIRUS GLOBAL THREAT MONITOR · v3.2 · Auto-aggiornamento ogni 6h via <a href="https://github.com/ST80Dev/Hantavirus" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">GitHub Actions</a> · Fonti ufficiali EU/ITA/INT</div>
   <div class="ft-srcs">
     <span class="ftsrc" title="iss.it/-/hantavirus">ISS Italia</span>
     <span class="ftsrc" title="epicentro.iss.it">EpiCentro ISS</span>
@@ -1058,8 +1058,7 @@ footer {
    CONFIG
 ──────────────────────────────────────────────── */
 const CFG = {
-  UPDATE_MS:    4 * 60 * 60 * 1000,  // ogni 4 ore
-  CACHE_KEY:    'hanta_v3',
+  CACHE_KEY: 'hanta_v3',
 };
 
 /* ────────────────────────────────────────────────
@@ -1290,14 +1289,6 @@ function fmtTime(ts) {
   if (!ts) return '—';
   return new Date(ts).toLocaleString('it-IT', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
 }
-function fmtRemaining(nextTs) {
-  const diff = nextTs - Date.now();
-  if (diff <= 0) return 'adesso';
-  const h = Math.floor(diff / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
-}
-
 /* ────────────────────────────────────────────────
    AUTO-UPDATE da data.json (generato da GitHub Actions)
 ──────────────────────────────────────────────── */
