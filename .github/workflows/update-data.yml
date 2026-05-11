@@ -39,14 +39,17 @@ jobs:
       - name: Valida schema
         run: python scripts/validate_data.py data.json
 
-      - name: Commit se cambiato
+      - name: Commit se cambiato (+ snapshot storico)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if git diff --quiet data.json; then
             echo "Nessuna modifica a data.json"
           else
-            git add data.json
+            STAMP=$(date -u +'%Y-%m-%d-%H%M')
+            mkdir -p history
+            cp data.json "history/data-${STAMP}.json"
+            git add data.json "history/data-${STAMP}.json"
             git commit -m "chore: data update $(date -u +'%Y-%m-%d %H:%M UTC')"
             git push
           fi

@@ -128,28 +128,44 @@ def build_prompt(prev_data, rss_items):
     return system, user
 
 
-def call_ollama(system, user):
+def call_ollama(system, user, max_retries=3):
     if not OLLAMA_API_KEY:
         raise RuntimeError("OLLAMA_API_KEY non configurata nell'environment")
-    resp = requests.post(
-        OLLAMA_URL,
-        headers={
-            "Authorization": f"Bearer {OLLAMA_API_KEY}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "model": OLLAMA_MODEL,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-            "temperature": 0.2,
-        },
-        timeout=180,
-    )
-    resp.raise_for_status()
-    payload = resp.json()
-    return payload["choices"][0]["message"]["content"]
+
+    last_err = None
+    for attempt in range(max_retries):
+        wait = 5 * (2 ** attempt)  # 5, 10, 20s
+        try:
+            resp = requests.post(
+                OLLAMA_URL,
+                headers={
+                    "Authorization": f"Bearer {OLLAMA_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": OLLAMA_MODEL,
+                    "messages": [
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": user},
+                    ],
+                    "temperature": 0.2,
+                },
+                timeout=180,
+            )
+            if resp.status_code == 429 or 500 <= resp.status_code < 600:
+                last_err = f"HTTP {resp.status_code}"
+                log(f"Ollama {last_err} (tentativo {attempt + 1}/{max_retries}), retry in {wait}s")
+                time.sleep(wait)
+                continue
+            resp.raise_for_status()
+            payload = resp.json()
+            return payload["choices"][0]["message"]["content"]
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            last_err = f"{e.__class__.__name__}: {e}"
+            log(f"Ollama network error: {last_err} (tentativo {attempt + 1}/{max_retries}), retry in {wait}s")
+            time.sleep(wait)
+
+    raise RuntimeError(f"Ollama failed dopo {max_retries} tentativi (ultimo errore: {last_err})")
 
 
 def extract_json(text):
