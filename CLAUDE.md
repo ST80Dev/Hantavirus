@@ -21,8 +21,10 @@ ECDC, ISS, CDC per ogni aggiornamento).
 ## Struttura file
 
 ```
-hantavirus_monitor.html   # Dashboard standalone (~325 KB, ~2400 righe)
+index.html                # Dashboard standalone (~325 KB, ~2400 righe)
                           # D3 + TopoJSON bundled, niente import esterni
+                          # Servita da GitHub Pages (rename da hantavirus_monitor.html)
+.nojekyll                 # Disattiva processing Jekyll su GitHub Pages
 .github/workflows/        # GitHub Actions (da creare)
 data.json                 # Stato corrente (da creare, generato da workflow)
 BRIEFING.md               # Contesto completo del progetto e decisioni prese
