@@ -1299,94 +1299,27 @@ function fmtRemaining(nextTs) {
 }
 
 /* ────────────────────────────────────────────────
-   AUTO-UPDATE via Claude API
+   AUTO-UPDATE da data.json (generato da GitHub Actions)
 ──────────────────────────────────────────────── */
 async function fetchUpdate() {
-  setUpdateBar('updating', '⟳ Ricerca aggiornamenti in corso…');
+  setUpdateBar('updating', '⟳ Lettura aggiornamenti…');
 
-  const SYSTEM = `Sei un sistema di intelligence epidemiologica multilingue. Cerca aggiornamenti sull'Hantavirus 2026 consultando PRIORITARIAMENTE le seguenti fonti ufficiali:
-
-FONTI ITALIANE: iss.it, epicentro.iss.it, salute.gov.it (Min. Salute IT)
-FONTI EUROPEE: ecdc.europa.eu, rivm.nl (NL), rki.de (DE), ukhsa.gov.uk (UK), santepubliquefrance.fr (FR), sanidad.gob.es (ES), bag.admin.ch (CH), fhi.no (NO), thl.fi (FI), folkhalsomyndigheten.se (SE), sciensano.be (BE), hpsc.ie (IE), nizp-pzh.gov.pl (PL), dgs.pt (PT)
-FONTI GLOBALI: who.int, cdc.gov, paho.org
-FONTI ARGENTINA: argentina.gob.ar/salud, inst.malbran.gov.ar
-FONTI ALTRI PAESI: cerca aggiornamenti da qualsiasi paese che segnali nuovi casi hantavirus
-
-Cerca in italiano e in inglese. Identifica:
-- QUALSIASI nuovo paese non in lista che segnali casi/sorveglianza
-- CAMBIAMENTI di stato di paesi già monitorati (es. da sospetto a confermato)
-- NUOVE TAPPE della nave MV Hondius (se ripartisse da Tenerife)
-- NUOVE EVACUAZIONI MEDICHE da/verso luoghi nuovi
-- NUOVI VOLI DI DISPERSIONE (rimpatri passeggeri, nuove rotte aeree con casi)
-- LIVELLO DEFCON aggiornato (1=critico, 5=normale; attuale=4)
-
-Restituisci SOLO un oggetto JSON minificato valido (niente markdown, niente testo prima/dopo):
-{
-  "ts":UNIX_MS,
-  "cases":N,"deaths":N,"monitored":N,"cfr":N,
-  "ship":"posizione nave in italiano",
-  "defcon":1-5,
-  "events":[{"date":"GG MMM YYYY","text":"descrizione con fonte","type":"d|c|w|m","tag":"BREVE","source":"fonte"}],
-  "new_countries":[
-    {"iso":"codice_ISO_3166_1_numerico","name_it":"nome IT","color":"#ef4444|#f59e0b|#22d3ee","note":"stato IT","lon":N,"lat":N,"marker_label":"ETICHETTA","marker_type":"active|monitor|origin"}
-  ],
-  "country_updates":[
-    {"iso":"codice_ISO_di_paese_GIÀ_in_lista","color":"#ef4444|#f59e0b|#22d3ee","note":"nuovo stato in italiano"}
-  ],
-  "route_updates":[
-    {"lon":N,"lat":N,"label":"nuova_tappa_nave (opzionale)"}
-  ],
-  "new_evacuations":[
-    {"from":[lon,lat],"to":[lon,lat],"label":"descrizione evac"}
-  ],
-  "new_flights":[
-    {"from":[lon,lat],"to":[lon,lat],"label":"descrizione volo"}
-  ]
-}
-Regole colori: #ef4444=caso confermato/decesso, #f59e0b=sospetto/allerta, #22d3ee=sorveglianza.
-new_countries: SOLO paesi NON già in lista.
-country_updates: SOLO paesi già in lista con CAMBIAMENTI reali (non ripetere stato attuale).
-route_updates: SOLO se la nave si è spostata DA TENERIFE; altrimenti array vuoto.
-new_evacuations / new_flights: SOLO se ci sono nuove rotte reali documentate; non ripetere quelle già esistenti.
-defcon: il livello AGGIORNATO oggi (1=pandemic-like, 2=outbreak grave, 3=elevato, 4=monitoraggio attivo, 5=normale).
-Tutti gli array possono essere vuoti se non c'è nulla di nuovo. Massimo 6 eventi.`;
-
-  const USER = `Cerca TUTTE le ultime notizie sull'outbreak Hantavirus 2026 (MV Hondius, Andes virus). Data: ${new Date().toISOString()}.
-STATO ATTUALE DEL SISTEMA:
-- Paesi monitorati: ${Object.entries(COUNTRIES).map(([iso,c])=>c.name+' ('+iso+', '+c.color+')').join('; ')}
-- Posizione nave: ultima tappa rotta = Tenerife
-- DEFCON attuale: ${_currentDefcon}
-- Evacuazioni note: S.Helena→Joburg, Ascensione→Joburg
-- Voli dispersione noti: KLM Joburg→Amsterdam(via Roma), Tenerife→{NL,UK,DE,CH}
-Identifica solo NOVITÀ reali rispetto a questo stato. Rispondi SOLO con JSON.`;
+  let parsed;
+  try {
+    const resp = await fetch('./data.json?t=' + Date.now(), { cache: 'no-store' });
+    if (resp.status === 404) {
+      setUpdateBar('error', '⚠ Modalità statica · data.json non ancora generato dal workflow');
+      return;
+    }
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    parsed = await resp.json();
+  } catch(err) {
+    console.warn('[Hanta] Fetch data.json error:', err);
+    setUpdateBar('error', `⚠ Impossibile leggere data.json: ${err.message} · mostro ultimo stato valido`);
+    return;
+  }
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1400,
-        system: SYSTEM,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{ role: 'user', content: USER }]
-      })
-    });
-
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-
-    // Extract text blocks
-    const text = (data.content || [])
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('');
-
-    // Parse JSON (strip markdown fences if any)
-    const clean = text.replace(/```json|```/g, '').trim();
-    const match = clean.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('JSON non trovato nella risposta');
-    const parsed = JSON.parse(match[0]);
 
     // Apply stat counters
     applyData({
@@ -1416,12 +1349,11 @@ Identifica solo NOVITÀ reali rispetto a questo stato. Rispondi SOLO con JSON.`;
       dynamicEvents = [newEvt, ...(dynamicEvents || [])];
     }
 
-    // New events for timeline
-    if (Array.isArray(parsed.events) && parsed.events.length > 0) {
-      const apiEvents = parsed.events.map(e => ({
+    // New events for timeline (data.json è snapshot completo: replace, no prepend)
+    if (Array.isArray(parsed.events)) {
+      dynamicEvents = parsed.events.map(e => ({
         ...e, g: 'AGGIORNAMENTO LIVE · ' + new Date().toLocaleDateString('it-IT'), tc: e.type
       }));
-      dynamicEvents = [...apiEvents, ...(dynamicEvents || [])];
     }
 
     // Track whether map needs redraw
@@ -1613,26 +1545,13 @@ Identifica solo NOVITÀ reali rispetto a questo stato. Rispondi SOLO con JSON.`;
     };
     try { localStorage.setItem(CFG.CACHE_KEY, JSON.stringify(cached)); } catch(_) {}
 
-    const nextTs = Date.now() + CFG.UPDATE_MS;
-    setUpdateBar('', `Ultimo aggiornamento: <strong>${fmtTime(Date.now())}</strong> · Prossimo tra <strong id="countdown">${fmtRemaining(nextTs)}</strong>`);
-    startCountdown(nextTs);
+    const dataTs = Number.isFinite(parsed.ts) ? parsed.ts : Date.now();
+    setUpdateBar('', `Aggiornato: <strong>${fmtTime(dataTs)}</strong> · sorgente <a href="./data.json" target="_blank" style="color:inherit;text-decoration:underline;">data.json</a>`);
 
   } catch(err) {
-    console.warn('[Hanta] Update error:', err);
-    setUpdateBar('error', `⚠ Aggiornamento fallito: ${err.message} — verrà ritentato tra 30 minuti`);
-    setTimeout(triggerUpdate, 30 * 60 * 1000);
+    console.warn('[Hanta] Apply update error:', err);
+    setUpdateBar('error', `⚠ Errore applicazione dati: ${err.message} · mostro ultimo stato valido`);
   }
-}
-
-/* countdown timer */
-let _countdownInt = null;
-function startCountdown(nextTs) {
-  clearInterval(_countdownInt);
-  _countdownInt = setInterval(() => {
-    const el = document.getElementById('countdown');
-    if (el) el.textContent = fmtRemaining(nextTs);
-    if (Date.now() >= nextTs) { clearInterval(_countdownInt); triggerUpdate(); }
-  }, 30000);
 }
 
 async function triggerUpdate() {
@@ -1726,27 +1645,21 @@ async function maybeUpdate() {
         });
       }
 
-      if (age < CFG.UPDATE_MS) {
-        // Cache still fresh: skip API call
-        applyData(data);
-        const nextTs = ts + CFG.UPDATE_MS;
-        setUpdateBar('', `Ultimo aggiornamento: <strong>${fmtTime(ts)}</strong> · Prossimo tra <strong id="countdown">${fmtRemaining(nextTs)}</strong>`);
-        startCountdown(nextTs);
-        // Trigger map refresh if ANY dynamic state was restored
-        const hasDynamic =
-          Object.keys(COUNTRIES).length > BASE_COUNTRY_KEYS.size ||
-          (dyna_country_updates && Object.keys(dyna_country_updates).length > 0) ||
-          ROUTE.length > BASE_ROUTE_LEN ||
-          EVACUATIONS.length > BASE_EVACUATIONS_LEN ||
-          FLIGHTS.length > BASE_FLIGHTS_LEN;
-        if (hasDynamic) {
-          setTimeout(() => refreshMapOverlays(), 2000);
-        }
-        return;
+      // Mostra subito i dati cached così l'utente vede qualcosa mentre fetchUpdate gira
+      if (data) applyData(data);
+      setUpdateBar('', `Cache: <strong>${fmtTime(ts)}</strong> · controllo data.json…`);
+      const hasDynamic =
+        Object.keys(COUNTRIES).length > BASE_COUNTRY_KEYS.size ||
+        (dyna_country_updates && Object.keys(dyna_country_updates).length > 0) ||
+        ROUTE.length > BASE_ROUTE_LEN ||
+        EVACUATIONS.length > BASE_EVACUATIONS_LEN ||
+        FLIGHTS.length > BASE_FLIGHTS_LEN;
+      if (hasDynamic) {
+        setTimeout(() => refreshMapOverlays(), 800);
       }
     }
   } catch(_) {}
-  // No valid cache → fetch now
+  // Sempre fetch data.json (file statico, costo ~zero) — sovrascrive la cache se più recente
   triggerUpdate();
 }
 
