@@ -32,20 +32,15 @@ OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gpt-oss:120b-cloud")
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 
 RSS_FEEDS = [
+    # TODO(simone): reintegrare ECDC e ISS EpiCentro quando avremo URL RSS confermati.
+    # Tutti i path Drupal tentati finora hanno restituito 404 o la homepage HTML.
+    # Per ECDC partire da https://www.ecdc.europa.eu/en/rss-feeds (copia link reale dal browser).
+    # Per ISS EpiCentro verificare se esista un feed pubblico (al momento non sembra).
+    #
     # WHO — news EN (include i Disease Outbreak News)
     ("WHO news EN",          "https://www.who.int/rss-feeds/news-english.xml"),
-    # ECDC — feed news standard (Drupal). Il vecchio /threats-and-outbreaks/rss.xml è 404.
-    # TODO(simone): l'URL Drupal qui sotto è un tentativo non verificato. Da confermare aprendo
-    # https://www.ecdc.europa.eu/en/rss-feeds dal browser e copiando il link reale.
-    ("ECDC news",            "https://www.ecdc.europa.eu/en/news-events/rss.xml"),
-    # ISS EpiCentro — provo path alla radice e tematico (il vecchio /rss/rss.xml è morto).
-    # TODO(simone): nessun feed RSS confermato per epicentro.iss.it. Verificare dal browser se
-    # esiste un feed pubblico o se la fonte va sostituita.
-    ("ISS EpiCentro",        "https://www.epicentro.iss.it/rss.xml"),
-    ("ISS EpiCentro infett", "https://www.epicentro.iss.it/infettive/rss.xml"),
-    # PAHO — alerts epidemiologici (path Drupal standard)
+    # PAHO — news regione Americhe
     ("PAHO news",            "https://www.paho.org/en/rss.xml"),
-    ("PAHO alerts",          "https://www.paho.org/en/news/rss.xml"),
     # CDC — Travel Notices (rilevante per outbreak su navi/viaggi) + Newsroom
     ("CDC Travel notices",   "https://wwwnc.cdc.gov/travel/rss/notices.xml"),
     ("CDC Newsroom",         "https://tools.cdc.gov/api/v2/resources/media/132608.rss"),
@@ -176,7 +171,11 @@ def build_prompt(prev_data, rss_items):
         "2. Una raccolta di entry RSS ufficiali (WHO, ECDC, ISS) degli ultimi 14 giorni\n\n"
         "Devi produrre il NUOVO data.json. Regole:\n"
         "- Mantieni TUTTI i campi dello stato precedente; modifica solo ciò che è cambiato realmente\n"
-        "- cases/deaths/monitored: aggiorna SOLO se le fonti citano numeri nuovi\n"
+        "- cases/deaths: SOLO CUMULATIVI E MONOTONI CRESCENTI. Mai diminuirli, anche se una fonte\n"
+        "  parla solo di 'casi attivi' o 'attualmente positivi'. Aumenta solo se una fonte ufficiale\n"
+        "  cita un totale cumulativo strettamente maggiore di quello precedente.\n"
+        "- monitored: può scendere (persone dimesse / non più sotto sorveglianza) o salire\n"
+        "- cfr: ricalcolato come deaths/cases*100 (non inventare)\n"
         "- ship: aggiorna se la nave si è spostata\n"
         "- defcon: cambia solo se la situazione è cambiata di livello (1=pandemic, 5=normale)\n"
         "- country_updates: paesi GIÀ in lista con cambio di stato (iso ISO 3166-1 numerico come stringa)\n"
@@ -249,6 +248,10 @@ def extract_json(text):
 def merge_with_prev(new_data, prev_data):
     """Fallback difensivo: se l'LLM omette un campo, recuperalo dallo stato precedente.
 
+    Applica anche un hard guard di monotonicità: `cases` e `deaths` sono cumulativi
+    epidemiologici e non possono diminuire (anche se l'LLM lo proponesse). `cfr` è
+    sempre ricalcolato da deaths/cases per evitare incoerenze.
+
     NB: NON aggiorna `ts` qui — viene fatto solo in main() dopo aver verificato
     che esistono cambiamenti sostanziali rispetto allo stato precedente.
     """
@@ -260,6 +263,19 @@ def merge_with_prev(new_data, prev_data):
               "new_evacuations", "new_flights", "events"):
         if k not in new_data:
             new_data[k] = prev_data.get(k, [])
+
+    for k in ("cases", "deaths"):
+        prev_v = prev_data.get(k)
+        new_v = new_data.get(k)
+        if isinstance(prev_v, (int, float)) and isinstance(new_v, (int, float)) and new_v < prev_v:
+            log(f"⚠ Hard guard: Ollama ha proposto {k}={new_v} < precedente {prev_v}. Tengo {prev_v}.")
+            new_data[k] = prev_v
+
+    cases = new_data.get("cases")
+    deaths = new_data.get("deaths")
+    if isinstance(cases, (int, float)) and isinstance(deaths, (int, float)) and cases > 0:
+        new_data["cfr"] = round(deaths / cases * 100, 1)
+
     return new_data
 
 
