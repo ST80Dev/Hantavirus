@@ -27,41 +27,68 @@ un riassunto in italiano dei cambiamenti proposti.
 - Leggi `CLAUDE.md` per ricordare schema JSON e colori validi
 - Esegui `git status` e `git log -1 --format='%h %s'` per sapere da dove parti
 
-### 2. Fetch fonti trusted
+### 2. Fetch fonti trusted (official + news)
 
-Per ogni fonte in `sources.json:trusted`:
+Per ogni fonte in `sources.json:trusted` (ufficiali) e
+`sources.json:news_trusted` (testate giornalistiche):
 
-- `WebFetch url=<fonte.url> prompt="Estrai informazioni delle ultime 72h
-  sull'outbreak Hantavirus MV Hondius 2026: casi cumulativi totali, decessi
-  cumulativi, persone in sorveglianza, paesi coinvolti, evacuazioni mediche,
-  voli rimpatrio, posizione nave. Riporta date e numeri esatti. Se la pagina
-  non parla di Hantavirus, dillo esplicitamente."`
+- **Tentativo primario**: `WebFetch url=<fonte.url> prompt="Estrai
+  informazioni delle ultime 72h sull'outbreak Hantavirus MV Hondius 2026:
+  casi cumulativi totali, decessi cumulativi, persone in sorveglianza,
+  paesi coinvolti, evacuazioni mediche, voli rimpatrio, posizione nave.
+  Riporta date e numeri esatti. Se la pagina non parla di Hantavirus,
+  dillo esplicitamente."`
+- **Fallback WebSearch (storicamente necessario)**: i domini governativi
+  (who.int, ecdc.europa.eu, cdc.gov, gov.uk, paho.org, rivm.nl, rki.de,
+  ecc.) restituiscono HTTP 403 a WebFetch dal sandbox Claude Code. Usa
+  in alternativa:
+  ```
+  WebSearch query="hantavirus MV Hondius <focus o data> cases deaths"
+           allowed_domains=[<lista da domain_whitelist_official>]
+  ```
+  e poi una seconda WebSearch più ampia su `domain_whitelist_news` per
+  i dettagli locali. WebSearch funziona affidabilmente e restituisce
+  sintesi datate dalle stesse fonti indicizzate da motori esterni.
 - Salva il sunto della fonte in un buffer locale (mentale, non scrivere file)
-- Se la fonte cita o linka un'**altra fonte ufficiale** (PDF, bollettino,
-  pagina specifica) con dati nuovi, aggiungi quell'URL a una lista
+- Se la fonte cita o linka un'**altra fonte** (PDF ufficiale, bollettino,
+  articolo specifico) con dati nuovi, aggiungi quell'URL a una lista
   `to_explore`
 
 Se l'argomento `$ARGUMENTS` è presente, dai priorità alle fonti che hanno
 più probabilità di riguardarlo (es. focus "Spagna" → sanidad-es, who-don,
-ecdc-threats prima).
+ecdc-threats, elpais, elmundo, abc.es prima).
+
+### 2b. Distinzione official vs news
+
+Le **official** (campo `trusted`) sono autoritative su numeri cumulativi
+(cases, deaths, monitored) e sul defcon. Le **news** (`news_trusted`)
+sono utili per:
+- timeline degli eventi e dettagli geografici (chi è dove, quale ospedale)
+- arrivare ai numeri quando le official sono in ritardo
+- citazioni di funzionari (\"Schillaci: nessun pericolo\", \"Min. Butler\")
+
+Per modificare `cases`/`deaths` cumulativi serve **almeno 1 fonte
+official** che li confermi. Le news da sole non bastano per i contatori.
+Per gli `events` e i `country_updates` (note testuali) le news bastano.
 
 ### 3. Esplorazione fonti scoperte
 
 Per ogni URL nuovo in `to_explore`:
 
-- Estrai il dominio. Se il dominio è in `domain_whitelist` → fonte
-  considerata ufficiale, procedi con `WebFetch` con lo stesso prompt
-  del passo 2.
-- Se il dominio NON è in whitelist → ignora (rumore) **a meno che**
-  più fonti trusted indipendenti citino lo stesso URL: in quel caso
-  segnalalo a Simone e chiedi (`AskUserQuestion`) se promuoverlo a
-  candidate.
+- Estrai il dominio.
+- Se è in `domain_whitelist_official` → procedi con WebFetch/WebSearch,
+  considera la fonte autoritativa per i numeri.
+- Se è in `domain_whitelist_news` → procedi, ma usa la fonte solo per
+  arricchire timeline/note testuali (non per `cases`/`deaths`).
+- Se NON è in nessuna whitelist → ignora (rumore) **a meno che** più
+  fonti trusted indipendenti citino lo stesso URL: in quel caso segnalalo
+  a Simone e chiedi (`AskUserQuestion`) se promuoverlo a candidate.
 - Per le fonti effettivamente utili, aggiungi voce in
   `sources.json:candidates` con campi: `id`, `name`, `url`, `lang`,
-  `notes` ("scoperta il YYYY-MM-DD via <fonte_referente>"),
-  `discovered_at` (data ISO), `seen_count: 1`.
-- Se una candidate compare in 3 run successive (controlla `seen_count`
-  in `sources.json`), proponi a Simone di promuoverla a `trusted`.
+  `tier` (\"official\" o \"news\"), `notes` (\"scoperta il YYYY-MM-DD via
+  <fonte_referente>\"), `discovered_at` (data ISO), `seen_count: 1`.
+- Se una candidate compare in 3 run successive (controlla `seen_count`),
+  proponi a Simone di promuoverla a `trusted`/`news_trusted`.
 
 ### 4. Sintesi e diff
 
