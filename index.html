@@ -239,7 +239,7 @@ header {
    STAT CARDS
 ══════════════════════════════════════════ */
 .stats {
-  display:grid; grid-template-columns:repeat(4,1fr);
+  display:grid; grid-template-columns:repeat(5,1fr);
   gap:12px; padding:14px 22px;
   border-bottom:1px solid var(--border);
 }
@@ -258,6 +258,10 @@ header {
 .scard.cc::before { background:var(--cyan);  box-shadow:0 0 10px var(--cyan-bg); }
 .scard.ca::before { background:var(--amber); box-shadow:0 0 10px var(--amber-bg); }
 .scard.ct::before { background:var(--teal);  box-shadow:0 0 10px var(--teal-bg); }
+.scard.cg::before { background:var(--teal);  box-shadow:0 0 10px var(--teal-bg); }
+.cg .sval { color:var(--teal);  text-shadow:0 0 24px rgba(15,212,164,.35); }
+.cg .sval .stsplit { color:var(--text-muted); font-weight:var(--fw-med); margin:0 5px; }
+.cg .sval .stunit  { font-size:.5em; color:var(--text-muted); font-weight:var(--fw-med); margin-left:3px; letter-spacing:.05em; }
 
 .slbl {
   font-family:var(--font-mo); font-size:11px; font-weight:var(--fw-semi);
@@ -585,6 +589,26 @@ header {
 }
 .dcard:hover { border-color:var(--border-hi); }
 
+/* Cluster Hondius storicizzato — <details> collassabile */
+details.cluster-historic { padding:0; }
+details.cluster-historic > .cluster-body { padding:0 22px 18px; }
+details.cluster-historic .cluster-summary {
+  margin:0; padding:18px 22px; border-bottom:1px solid var(--border);
+  list-style:none; display:flex; flex-wrap:wrap; align-items:center;
+  gap:8px 14px; transition:background .15s;
+}
+details.cluster-historic .cluster-summary::-webkit-details-marker { display:none; }
+details.cluster-historic .cluster-summary:hover { background:rgba(239,68,68,.04); }
+details.cluster-historic .cluster-hint {
+  text-transform:none; letter-spacing:0; font-weight:var(--fw-med);
+  color:var(--text-muted); font-size:11.5px; flex:1 1 100%;
+}
+details.cluster-historic .cluster-chev {
+  margin-left:auto; transition:transform .25s ease; font-size:14px;
+}
+details.cluster-historic[open] .cluster-chev { transform:rotate(180deg); }
+details.cluster-historic[open] .cluster-summary { border-bottom:1px solid var(--border); }
+
 .dc-head {
   display:flex; align-items:center; justify-content:space-between;
   margin-bottom:18px; padding-bottom:12px;
@@ -665,6 +689,7 @@ footer {
   .body-grid  { grid-template-columns:1fr; }
   .sidebar    { height:auto; position:static; max-height:300px; }
   .stats      { grid-template-columns:repeat(2,1fr); gap:9px; padding:12px 14px; }
+  .stats .cg  { grid-column:1 / -1; }   /* quinta card su tutta la riga */
   .info-grid  { grid-template-columns:1fr; }
   .data-grid  { grid-template-columns:1fr; }
   .hdr-badges { display:none; }
@@ -796,8 +821,7 @@ footer {
 </header>
 <div id="update-bar">
   <span id="update-icon">●</span>
-  <span id="update-msg">Ultimo aggiornamento: <strong id="last-upd">—</strong> · prossimo controllo tra <strong id="next-upd">—</strong></span>
-  <button onclick="triggerUpdate()" style="margin-left:auto;font-family:var(--font-mo);font-size:12.5px;font-weight:600;background:transparent;border:1px solid var(--border-md);color:var(--text-muted);padding:3px 12px;border-radius:3px;cursor:pointer;">↻ Aggiorna ora</button>
+  <span id="update-msg">Ultimo aggiornamento: <strong id="last-upd">—</strong></span>
 </div>
 
 <!-- ══════════════ STAT CARDS ══════════════ -->
@@ -825,6 +849,12 @@ footer {
     <div class="sval" id="v-cfr">0%</div>
     <div class="ssub">Andes virus storico: 20–50% Americhe</div>
     <span class="sdelta b-teal badge">ANDES</span>
+  </div>
+  <div class="scard cg" id="trend-card">
+    <div class="slbl">Trend ultimi 3 giorni</div>
+    <div class="sval" id="v-trend">—</div>
+    <div class="ssub" id="v-trend-sub">in attesa di snapshot storici</div>
+    <span class="sdelta b-teal badge" id="v-trend-badge">TREND</span>
   </div>
 </div>
 
@@ -997,12 +1027,14 @@ footer {
           </div>
         </div>
 
-        <!-- Cluster details — Italian full names -->
-        <div class="dcard" id="cluster-card" style="border-color:rgba(239,68,68,.25);">
-          <div class="dc-head" style="color:var(--red);">
-            Cluster MV Hondius · Stato attuale
-            <div class="live-dot"></div>
-          </div>
+        <!-- Cluster details — snapshot storicizzato (5–8 mag 2026) -->
+        <details class="dcard cluster-historic" id="cluster-card" style="border-color:rgba(239,68,68,.25); padding:0;">
+          <summary class="dc-head cluster-summary" style="color:var(--red); cursor:pointer; user-select:none;">
+            <span>📜 Snapshot storico cluster MV Hondius · 5–8 mag 2026</span>
+            <span class="cluster-hint">— dati congelati al momento dell'allerta iniziale, non riflettono la situazione corrente. Tocca per espandere.</span>
+            <span class="cluster-chev" aria-hidden="true">▾</span>
+          </summary>
+          <div class="cluster-body">
           <div class="crow"><div class="clabel">Casi totali (confermati + probabili)</div><div class="cval" style="color:var(--cyan);">8 <span class="cnote">6 PCR+ · 2 probabili</span></div></div>
           <div class="crow"><div class="clabel">Decessi</div><div class="cval" style="color:var(--red);">3 <span class="cnote">2 Andes conf. · 1 in corso</span></div></div>
           <div class="crow"><div class="clabel">Paziente in terapia intensiva</div><div class="cval" style="color:var(--amber);">1 <span class="cnote">Johannesburg, Sudafrica</span></div></div>
@@ -1013,7 +1045,8 @@ footer {
           <div class="crow"><div class="clabel">Ceppo identificato</div><div class="cval" style="color:var(--red);">ANDES VIRUS (ANDV)</div></div>
           <div class="crow"><div class="clabel">Valutazione WHO (04 mag 2026)</div><div class="cval" style="color:var(--teal);">BASSO <span class="cnote">rischio globale</span></div></div>
           <div class="crow" id="ship-row"><div class="clabel">Nave MV Hondius — posizione</div><div class="cval" style="color:var(--amber);">Tenerife, Spagna</div></div>
-        </div>
+          </div>
+        </details>
 
       </div>
     </div>
@@ -1023,7 +1056,7 @@ footer {
 
 <!-- FOOTER -->
 <footer>
-  <div class="ft-l">HANTAVIRUS GLOBAL THREAT MONITOR · v3.2 · Auto-aggiornamento ogni 6h via <a href="https://github.com/ST80Dev/Hantavirus" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">GitHub Actions</a> · Fonti ufficiali EU/ITA/INT</div>
+  <div class="ft-l">HANTAVIRUS GLOBAL THREAT MONITOR · v3.3 · Aggiornamenti manuali via <a href="https://github.com/ST80Dev/Hantavirus" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">/aggiorna-hanta</a> · Fonti ufficiali EU/ITA/INT</div>
   <div class="ft-srcs">
     <span class="ftsrc" title="iss.it/-/hantavirus">ISS Italia</span>
     <span class="ftsrc" title="epicentro.iss.it">EpiCentro ISS</span>
@@ -1213,10 +1246,76 @@ const BASE_EVENTS = [
 let dynamicEvents = [];
 
 /* ────────────────────────────────────────────────
+   PARSE EVENT DATE
+   Accetta i 4 formati presenti in BASE_EVENTS + data.json.events:
+   - "10 MAG 2026" / "07 mag 2026" / "01 mag. 2026" (DD MMM YYYY)
+   - "NOV 2025" / "MAG 1993"                          (MMM YYYY)
+   - "2025" / "1995"                                  (YYYY)
+   - "1951–1954" / "2018–2019"                        (YYYY–YYYY → primo anno)
+   Restituisce timestamp ms; 0 se non parsabile (va in fondo).
+──────────────────────────────────────────────── */
+const IT_MONTHS = {
+  gen:0, gennaio:0, feb:1, febbraio:1, mar:2, marzo:2, apr:3, aprile:3,
+  mag:4, maggio:4, giu:5, giugno:5, lug:6, luglio:6, ago:7, agosto:7,
+  set:8, sett:8, settembre:8, ott:9, ottobre:9, nov:10, novembre:10,
+  dic:11, dicembre:11
+};
+function parseEventDate(s) {
+  if (typeof s !== 'string') return 0;
+  const t = s.trim().toLowerCase().replace(/\./g, '');
+  // 1) DD MMM YYYY
+  let m = t.match(/^(\d{1,2})\s+([a-zàèéìòù]+)\s+(\d{4})$/);
+  if (m) {
+    const mo = IT_MONTHS[m[2]];
+    if (mo !== undefined) return Date.UTC(+m[3], mo, +m[1]);
+  }
+  // 2) MMM YYYY
+  m = t.match(/^([a-zàèéìòù]+)\s+(\d{4})$/);
+  if (m) {
+    const mo = IT_MONTHS[m[1]];
+    if (mo !== undefined) return Date.UTC(+m[2], mo, 1);
+  }
+  // 3) YYYY–YYYY (en-dash o hyphen)
+  m = t.match(/^(\d{4})\s*[–-]\s*\d{4}$/);
+  if (m) return Date.UTC(+m[1], 0, 1);
+  // 4) YYYY
+  m = t.match(/^(\d{4})$/);
+  if (m) return Date.UTC(+m[1], 0, 1);
+  return 0;
+}
+
+/* ────────────────────────────────────────────────
    RENDER TIMELINE
+   Strategia:
+   - Eventi 2026 (dynamic da data.json + BASE_EVENTS gruppo "OUTBREAK 2026 · LIVE")
+     vengono fusi in un unico gruppo "OUTBREAK 2026 · LIVE", deduplicati (chiave
+     date+text) e ordinati per data DECRESCENTE (più recenti in cima).
+   - "CRONOLOGIA STORICA" resta un gruppo separato, ordinato decrescente al suo
+     interno.
 ──────────────────────────────────────────────── */
 function renderTimeline(extra = []) {
-  const all = [...extra, ...BASE_EVENTS];
+  const LIVE_G = 'OUTBREAK 2026 · LIVE';
+  const HIST_G = 'CRONOLOGIA STORICA';
+  // Eventi dinamici (da data.json) → tutti considerati outbreak live
+  const liveDyn = (extra || []).map(e => ({ ...e, g: LIVE_G, tc: e.tc || e.type }));
+  // Split BASE_EVENTS per gruppo
+  const liveBase = BASE_EVENTS.filter(e => e.g === LIVE_G);
+  const histBase = BASE_EVENTS.filter(e => e.g === HIST_G);
+  // Dedup live: chiave = date + primi 60 char di text (case-insensitive)
+  const seen = new Set();
+  const live = [];
+  [...liveDyn, ...liveBase].forEach(ev => {
+    const key = (ev.date || '').toLowerCase() + '|' +
+                (ev.text || '').toLowerCase().slice(0, 60);
+    if (seen.has(key)) return;
+    seen.add(key);
+    live.push(ev);
+  });
+  // Sort per data discendente
+  const byDateDesc = (a, b) => parseEventDate(b.date) - parseEventDate(a.date);
+  live.sort(byDateDesc);
+  const hist = [...histBase].sort(byDateDesc);
+  const all = [...live, ...hist];
   const container = document.getElementById('timeline-list');
   let html = '';
   let lastG = null;
@@ -1259,6 +1358,39 @@ function applyData(d) {
   animCount(document.getElementById('v-cases'),  DATA.cases,     '',  1400, false);
   animCount(document.getElementById('v-mon'),    DATA.monitored, '',  1600, false);
   animCount(document.getElementById('v-cfr'),    DATA.cfr,       '%', 1800, true);
+  renderTrendCard(DATA.trend_3d);
+}
+
+function renderTrendCard(t) {
+  const valEl   = document.getElementById('v-trend');
+  const subEl   = document.getElementById('v-trend-sub');
+  const badgeEl = document.getElementById('v-trend-badge');
+  if (!valEl || !t || typeof t !== 'object') {
+    if (valEl)   valEl.textContent = '—';
+    if (subEl)   subEl.textContent = 'in attesa di snapshot storici';
+    if (badgeEl) badgeEl.textContent = 'TREND';
+    return;
+  }
+  const fmt = n => (n > 0 ? '+' + n : String(n));
+  const dCases = t.cases_delta || 0;
+  const dMon   = t.monitored_delta || 0;
+  const dDeath = t.deaths_delta || 0;
+  // Valore principale: casi e monitorati a colpo d'occhio
+  valEl.innerHTML = `${fmt(dCases)}<span class="stunit">casi</span>` +
+                    `<span class="stsplit">·</span>` +
+                    `${fmt(dMon)}<span class="stunit">monitorati</span>`;
+  // Sotto-riga: decessi + finestra temporale
+  const fromDate = t.from_ts ? new Date(t.from_ts) : null;
+  const toDate   = t.to_ts   ? new Date(t.to_ts)   : null;
+  const fmtD = d => d ? d.toLocaleDateString('it-IT', {day:'2-digit', month:'short'}) : '—';
+  const win  = fromDate && toDate ? `${fmtD(fromDate)} → ${fmtD(toDate)}` : '';
+  subEl.textContent = `${fmt(dDeath)} decessi · ${win}`;
+  // Badge: etichetta sintetica del trend
+  let label = '→ stabile';
+  if (dCases >= 3 || dMon >= 25) label = '▲ ACCELERA';
+  else if (dCases > 0 || dMon > 0) label = '↗ in crescita';
+  else if (dCases < 0 || dMon < 0) label = '↘ in calo';
+  badgeEl.textContent = label;
 }
 
 /* ────────────────────────────────────────────────
@@ -1290,7 +1422,8 @@ function fmtTime(ts) {
   return new Date(ts).toLocaleString('it-IT', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
 }
 /* ────────────────────────────────────────────────
-   AUTO-UPDATE da data.json (generato da GitHub Actions)
+   AUTO-UPDATE da data.json (generato dal command /aggiorna-hanta
+   eseguito manualmente da claude.ai/code; vedi .claude/commands/)
 ──────────────────────────────────────────────── */
 async function fetchUpdate() {
   setUpdateBar('updating', '⟳ Lettura aggiornamenti…');
@@ -1299,7 +1432,7 @@ async function fetchUpdate() {
   try {
     const resp = await fetch('./data.json?t=' + Date.now(), { cache: 'no-store' });
     if (resp.status === 404) {
-      setUpdateBar('error', '⚠ Modalità statica · data.json non ancora generato dal workflow');
+      setUpdateBar('error', '⚠ Modalità statica · data.json non disponibile');
       return;
     }
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -1537,16 +1670,12 @@ async function fetchUpdate() {
     try { localStorage.setItem(CFG.CACHE_KEY, JSON.stringify(cached)); } catch(_) {}
 
     const dataTs = Number.isFinite(parsed.ts) ? parsed.ts : Date.now();
-    setUpdateBar('', `Aggiornato: <strong>${fmtTime(dataTs)}</strong> · sorgente <a href="./data.json" target="_blank" style="color:inherit;text-decoration:underline;">data.json</a>`);
+    setUpdateBar('', `Ultima esecuzione <code style="font-family:var(--font-mo);background:rgba(15,212,164,.08);padding:1px 5px;border-radius:3px;">/aggiorna-hanta</code>: <strong>${fmtTime(dataTs)}</strong>`);
 
   } catch(err) {
     console.warn('[Hanta] Apply update error:', err);
     setUpdateBar('error', `⚠ Errore applicazione dati: ${err.message} · mostro ultimo stato valido`);
   }
-}
-
-async function triggerUpdate() {
-  await fetchUpdate();
 }
 
 /* Decide se fare update o usare cache */
@@ -1651,7 +1780,7 @@ async function maybeUpdate() {
     }
   } catch(_) {}
   // Sempre fetch data.json (file statico, costo ~zero) — sovrascrive la cache se più recente
-  triggerUpdate();
+  await fetchUpdate();
 }
 
 /* ────────────────────────────────────────────────
@@ -2293,6 +2422,21 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateClock, 1000);
   renderTimeline();
   setTimeout(() => applyData(DATA), 400);
+  // Cluster Hondius: aperto su desktop, chiuso su mobile (≤900px)
+  const clusterEl = document.getElementById('cluster-card');
+  if (clusterEl) {
+    const setOpen = () => {
+      clusterEl.open = window.matchMedia('(min-width: 901px)').matches;
+    };
+    setOpen();
+    // Una sola volta al resize per non interferire dopo che l'utente lo apre/chiude manualmente
+    let didResize = false;
+    window.addEventListener('resize', () => {
+      if (didResize) return;
+      didResize = true;
+      setTimeout(() => { setOpen(); didResize = false; }, 250);
+    }, { passive: true });
+  }
 });
 
 /* Map init on `load` event — fonts/images/layout fully settled (critical on mobile Chrome) */

@@ -110,6 +110,20 @@ class Validator:
                 if not isinstance(item.get("label", ""), str):
                     self.err(f"{key}[{i}].label: deve essere stringa")
 
+        trend = d.get("trend_3d")
+        if trend is not None:
+            if not isinstance(trend, dict):
+                self.err("trend_3d: deve essere oggetto se presente")
+            else:
+                for k in ("from_ts", "to_ts"):
+                    if not is_int(trend.get(k)):
+                        self.err(f"trend_3d.{k}: deve essere int (unix ms)")
+                for k in ("cases_delta", "deaths_delta", "monitored_delta"):
+                    if not is_int(trend.get(k)):
+                        self.err(f"trend_3d.{k}: deve essere int (può essere negativo)")
+                if not isinstance(trend.get("window_label", ""), str):
+                    self.err("trend_3d.window_label: deve essere stringa")
+
         for i, ev in enumerate(d.get("events", []) or []):
             if not isinstance(ev, dict):
                 self.err(f"events[{i}]: deve essere oggetto")
