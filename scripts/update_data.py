@@ -54,50 +54,91 @@ def log(msg):
     print(f"[update] {msg}", flush=True)
 
 
+USER_AGENT = (
+    "Mozilla/5.0 (compatible; Hantavirus-Monitor/1.0; "
+    "+https://github.com/ST80Dev/Hantavirus)"
+)
+REQUEST_TIMEOUT = 20
+
+
+def fetch_feed(name, url):
+    """Scarica il feed con requests (log HTTP esplicito) e lo passa a feedparser.
+
+    Questo permette di vedere nei log status code, content-type, dimensione e
+    redirect — informazioni che `feedparser.parse(url)` nasconderebbe quando
+    fallisce silenziosamente (entries=[] senza eccezione).
+    """
+    try:
+        r = requests.get(
+            url,
+            headers={
+                "User-Agent": USER_AGENT,
+                "Accept": "application/rss+xml, application/atom+xml, application/xml;q=0.9, */*;q=0.8",
+            },
+            timeout=REQUEST_TIMEOUT,
+            allow_redirects=True,
+        )
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError, requests.exceptions.RequestException) as ex:
+        log(f"{name}: HTTP fail ({ex.__class__.__name__}: {ex})")
+        return None
+
+    ct = r.headers.get("content-type", "?")
+    final = r.url if r.url != url else "(stesso URL)"
+    log(f"{name}: HTTP {r.status_code} ct={ct} bytes={len(r.content)} final={final}")
+    if r.status_code != 200:
+        log(f"  ✗ {name}: status non-200, body[0:200]={r.text[:200]!r}")
+        return None
+    if len(r.content) < 50:
+        log(f"  ✗ {name}: payload sospettosamente piccolo: {r.text!r}")
+        return None
+
+    parsed = feedparser.parse(r.content)
+    if parsed.get("bozo"):
+        exc = parsed.get("bozo_exception")
+        log(f"  ⚠ {name}: feedparser bozo=1 ({exc.__class__.__name__ if exc else '?'}: {exc})")
+    return parsed
+
+
 def fetch_rss_items():
     cutoff = datetime.now(timezone.utc) - timedelta(days=LOOKBACK_DAYS)
     collected = []
     for name, url in RSS_FEEDS:
-        try:
-            parsed = feedparser.parse(
-                url,
-                request_headers={"User-Agent": "Hantavirus-Monitor/1.0 (+github.com/ST80Dev/Hantavirus)"},
-            )
-            entries = parsed.entries or []
-            log(f"{name}: {len(entries)} entries totali")
-            raw_titles_logged = 0
-            in_window = 0
-            for e in entries:
-                title = (e.get("title") or "").strip()
-                summary = (e.get("summary") or e.get("description") or "").strip()
-                link = e.get("link") or ""
-                published = None
-                for k in ("published_parsed", "updated_parsed"):
-                    if e.get(k):
-                        published = datetime(*e[k][:6], tzinfo=timezone.utc)
-                        break
-                if published and published < cutoff:
-                    continue
-                in_window += 1
-                if raw_titles_logged < MAX_RAW_TITLES_LOG:
-                    date_str = published.date().isoformat() if published else "??"
-                    log(f"  · [{name}] {date_str} — {title[:140]}")
-                    raw_titles_logged += 1
-                if not KEYWORDS.search(title + " " + summary):
-                    continue
-                clean_summary = re.sub(r"<[^>]+>", "", summary)
-                clean_summary = re.sub(r"\s+", " ", clean_summary).strip()[:600]
-                log(f"  ✓ MATCH [{name}] {title[:140]}")
-                collected.append({
-                    "source": name,
-                    "title": title,
-                    "summary": clean_summary,
-                    "link": link,
-                    "date": published.isoformat() if published else "",
-                })
-            log(f"  → {name}: {in_window} entries nella finestra {LOOKBACK_DAYS}gg")
-        except Exception as ex:
-            log(f"{name}: errore fetch ({ex.__class__.__name__}: {ex}) — salto")
+        parsed = fetch_feed(name, url)
+        if parsed is None:
+            continue
+        entries = parsed.entries or []
+        log(f"{name}: {len(entries)} entries parsed")
+        raw_titles_logged = 0
+        in_window = 0
+        for e in entries:
+            title = (e.get("title") or "").strip()
+            summary = (e.get("summary") or e.get("description") or "").strip()
+            link = e.get("link") or ""
+            published = None
+            for k in ("published_parsed", "updated_parsed"):
+                if e.get(k):
+                    published = datetime(*e[k][:6], tzinfo=timezone.utc)
+                    break
+            if published and published < cutoff:
+                continue
+            in_window += 1
+            if raw_titles_logged < MAX_RAW_TITLES_LOG:
+                date_str = published.date().isoformat() if published else "??"
+                log(f"  · [{name}] {date_str} — {title[:140]}")
+                raw_titles_logged += 1
+            if not KEYWORDS.search(title + " " + summary):
+                continue
+            clean_summary = re.sub(r"<[^>]+>", "", summary)
+            clean_summary = re.sub(r"\s+", " ", clean_summary).strip()[:600]
+            log(f"  ✓ MATCH [{name}] {title[:140]}")
+            collected.append({
+                "source": name,
+                "title": title,
+                "summary": clean_summary,
+                "link": link,
+                "date": published.isoformat() if published else "",
+            })
+        log(f"  → {name}: {in_window} entries nella finestra {LOOKBACK_DAYS}gg")
     log(f"Entries hantavirus-related dopo filtro: {len(collected)}")
     return collected
 
