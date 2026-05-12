@@ -35,8 +35,12 @@ RSS_FEEDS = [
     # WHO — news EN (include i Disease Outbreak News)
     ("WHO news EN",          "https://www.who.int/rss-feeds/news-english.xml"),
     # ECDC — feed news standard (Drupal). Il vecchio /threats-and-outbreaks/rss.xml è 404.
+    # TODO(simone): l'URL Drupal qui sotto è un tentativo non verificato. Da confermare aprendo
+    # https://www.ecdc.europa.eu/en/rss-feeds dal browser e copiando il link reale.
     ("ECDC news",            "https://www.ecdc.europa.eu/en/news-events/rss.xml"),
-    # ISS EpiCentro — provo path alla radice e tematico (il vecchio /rss/rss.xml è morto)
+    # ISS EpiCentro — provo path alla radice e tematico (il vecchio /rss/rss.xml è morto).
+    # TODO(simone): nessun feed RSS confermato per epicentro.iss.it. Verificare dal browser se
+    # esiste un feed pubblico o se la fonte va sostituita.
     ("ISS EpiCentro",        "https://www.epicentro.iss.it/rss.xml"),
     ("ISS EpiCentro infett", "https://www.epicentro.iss.it/infettive/rss.xml"),
     # PAHO — alerts epidemiologici (path Drupal standard)
