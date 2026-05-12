@@ -1,9 +1,9 @@
 {
   "ts": 1778596384725,
-  "cases": 8,
+  "cases": 10,
   "deaths": 3,
   "monitored": 147,
-  "cfr": 37.5,
+  "cfr": 30.0,
   "ship": "Tenerife – Port of Granadilla (sbarco in corso)",
   "defcon": 4,
   "country_updates": [
