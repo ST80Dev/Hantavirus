@@ -32,20 +32,15 @@ OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gpt-oss:120b-cloud")
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 
 RSS_FEEDS = [
+    # TODO(simone): reintegrare ECDC e ISS EpiCentro quando avremo URL RSS confermati.
+    # Tutti i path Drupal tentati finora hanno restituito 404 o la homepage HTML.
+    # Per ECDC partire da https://www.ecdc.europa.eu/en/rss-feeds (copia link reale dal browser).
+    # Per ISS EpiCentro verificare se esista un feed pubblico (al momento non sembra).
+    #
     # WHO — news EN (include i Disease Outbreak News)
     ("WHO news EN",          "https://www.who.int/rss-feeds/news-english.xml"),
-    # ECDC — feed news standard (Drupal). Il vecchio /threats-and-outbreaks/rss.xml è 404.
-    # TODO(simone): l'URL Drupal qui sotto è un tentativo non verificato. Da confermare aprendo
-    # https://www.ecdc.europa.eu/en/rss-feeds dal browser e copiando il link reale.
-    ("ECDC news",            "https://www.ecdc.europa.eu/en/news-events/rss.xml"),
-    # ISS EpiCentro — provo path alla radice e tematico (il vecchio /rss/rss.xml è morto).
-    # TODO(simone): nessun feed RSS confermato per epicentro.iss.it. Verificare dal browser se
-    # esiste un feed pubblico o se la fonte va sostituita.
-    ("ISS EpiCentro",        "https://www.epicentro.iss.it/rss.xml"),
-    ("ISS EpiCentro infett", "https://www.epicentro.iss.it/infettive/rss.xml"),
-    # PAHO — alerts epidemiologici (path Drupal standard)
+    # PAHO — news regione Americhe
     ("PAHO news",            "https://www.paho.org/en/rss.xml"),
-    ("PAHO alerts",          "https://www.paho.org/en/news/rss.xml"),
     # CDC — Travel Notices (rilevante per outbreak su navi/viaggi) + Newsroom
     ("CDC Travel notices",   "https://wwwnc.cdc.gov/travel/rss/notices.xml"),
     ("CDC Newsroom",         "https://tools.cdc.gov/api/v2/resources/media/132608.rss"),
