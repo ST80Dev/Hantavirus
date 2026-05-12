@@ -32,14 +32,22 @@ OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gpt-oss:120b-cloud")
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 
 RSS_FEEDS = [
-    ("WHO DON",       "https://www.who.int/feeds/entity/csr/don/en/rss.xml"),
-    ("ECDC threats",  "https://www.ecdc.europa.eu/en/threats-and-outbreaks/rss.xml"),
-    ("ISS EpiCentro", "https://www.epicentro.iss.it/rss/rss.xml"),
+    ("WHO DON",         "https://www.who.int/feeds/entity/csr/don/en/rss.xml"),
+    ("ECDC threats",    "https://www.ecdc.europa.eu/en/threats-and-outbreaks/rss.xml"),
+    ("ISS EpiCentro",   "https://www.epicentro.iss.it/rss/rss.xml"),
+    ("ISS news",        "https://www.iss.it/rss"),
+    ("Min. Salute IT",  "https://www.salute.gov.it/portale/news/p3_2_1_1.jsp?menu=notizie&tipo=rss"),
 ]
 
-KEYWORDS = re.compile(r"hantavirus|hondius|andes\s*virus|don599", re.I)
+KEYWORDS = re.compile(
+    r"hantavirus|hantaviral|\bhanta\b|hondius|andes\s*virus|"
+    r"\bdon\s*\d{2,4}\b|\bHPS\b|\bHFRS\b|sin\s*nombre|"
+    r"pulmonary\s*syndrome|sindrome\s*polmonare|febbre\s*emorragica",
+    re.I,
+)
 LOOKBACK_DAYS = 14
 MAX_CONTEXT_CHARS = 8000
+MAX_RAW_TITLES_LOG = 8
 
 
 def log(msg):
@@ -57,6 +65,8 @@ def fetch_rss_items():
             )
             entries = parsed.entries or []
             log(f"{name}: {len(entries)} entries totali")
+            raw_titles_logged = 0
+            in_window = 0
             for e in entries:
                 title = (e.get("title") or "").strip()
                 summary = (e.get("summary") or e.get("description") or "").strip()
@@ -68,10 +78,16 @@ def fetch_rss_items():
                         break
                 if published and published < cutoff:
                     continue
+                in_window += 1
+                if raw_titles_logged < MAX_RAW_TITLES_LOG:
+                    date_str = published.date().isoformat() if published else "??"
+                    log(f"  · [{name}] {date_str} — {title[:140]}")
+                    raw_titles_logged += 1
                 if not KEYWORDS.search(title + " " + summary):
                     continue
                 clean_summary = re.sub(r"<[^>]+>", "", summary)
                 clean_summary = re.sub(r"\s+", " ", clean_summary).strip()[:600]
+                log(f"  ✓ MATCH [{name}] {title[:140]}")
                 collected.append({
                     "source": name,
                     "title": title,
@@ -79,6 +95,7 @@ def fetch_rss_items():
                     "link": link,
                     "date": published.isoformat() if published else "",
                 })
+            log(f"  → {name}: {in_window} entries nella finestra {LOOKBACK_DAYS}gg")
         except Exception as ex:
             log(f"{name}: errore fetch ({ex.__class__.__name__}: {ex}) — salto")
     log(f"Entries hantavirus-related dopo filtro: {len(collected)}")
@@ -177,7 +194,11 @@ def extract_json(text):
 
 
 def merge_with_prev(new_data, prev_data):
-    """Fallback difensivo: se l'LLM omette un campo, recuperalo dallo stato precedente."""
+    """Fallback difensivo: se l'LLM omette un campo, recuperalo dallo stato precedente.
+
+    NB: NON aggiorna `ts` qui — viene fatto solo in main() dopo aver verificato
+    che esistono cambiamenti sostanziali rispetto allo stato precedente.
+    """
     scalar_keys = ("cases", "deaths", "monitored", "cfr", "ship", "defcon")
     for k in scalar_keys:
         if k not in new_data and k in prev_data:
@@ -186,8 +207,18 @@ def merge_with_prev(new_data, prev_data):
               "new_evacuations", "new_flights", "events"):
         if k not in new_data:
             new_data[k] = prev_data.get(k, [])
-    new_data["ts"] = int(time.time() * 1000)
     return new_data
+
+
+def has_substantive_changes(new_data, prev_data):
+    """True se almeno un campo diverso da `ts` è cambiato fra new_data e prev_data."""
+    keys = set(new_data.keys()) | set(prev_data.keys())
+    keys.discard("ts")
+    for k in keys:
+        if new_data.get(k) != prev_data.get(k):
+            log(f"Cambio rilevato in campo '{k}'")
+            return True
+    return False
 
 
 def main():
@@ -196,6 +227,11 @@ def main():
         f"monitored={prev_data.get('monitored')}, ts={prev_data.get('ts')}")
 
     rss_items = fetch_rss_items()
+
+    if not rss_items:
+        log("Nessuna entry RSS rilevante: salto chiamata Ollama e non riscrivo data.json.")
+        return 0
+
     system, user = build_prompt(prev_data, rss_items)
 
     log(f"Chiamo Ollama Cloud ({OLLAMA_MODEL})...")
@@ -204,6 +240,12 @@ def main():
 
     new_data = extract_json(response_text)
     new_data = merge_with_prev(new_data, prev_data)
+
+    if not has_substantive_changes(new_data, prev_data):
+        log("Output Ollama identico allo stato precedente (solo ts cambierebbe): non riscrivo data.json.")
+        return 0
+
+    new_data["ts"] = int(time.time() * 1000)
 
     DATA_PATH.write_text(
         json.dumps(new_data, ensure_ascii=False, indent=2) + "\n",
