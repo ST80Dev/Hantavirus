@@ -171,7 +171,11 @@ def build_prompt(prev_data, rss_items):
         "2. Una raccolta di entry RSS ufficiali (WHO, ECDC, ISS) degli ultimi 14 giorni\n\n"
         "Devi produrre il NUOVO data.json. Regole:\n"
         "- Mantieni TUTTI i campi dello stato precedente; modifica solo ciò che è cambiato realmente\n"
-        "- cases/deaths/monitored: aggiorna SOLO se le fonti citano numeri nuovi\n"
+        "- cases/deaths: SOLO CUMULATIVI E MONOTONI CRESCENTI. Mai diminuirli, anche se una fonte\n"
+        "  parla solo di 'casi attivi' o 'attualmente positivi'. Aumenta solo se una fonte ufficiale\n"
+        "  cita un totale cumulativo strettamente maggiore di quello precedente.\n"
+        "- monitored: può scendere (persone dimesse / non più sotto sorveglianza) o salire\n"
+        "- cfr: ricalcolato come deaths/cases*100 (non inventare)\n"
         "- ship: aggiorna se la nave si è spostata\n"
         "- defcon: cambia solo se la situazione è cambiata di livello (1=pandemic, 5=normale)\n"
         "- country_updates: paesi GIÀ in lista con cambio di stato (iso ISO 3166-1 numerico come stringa)\n"
@@ -244,6 +248,10 @@ def extract_json(text):
 def merge_with_prev(new_data, prev_data):
     """Fallback difensivo: se l'LLM omette un campo, recuperalo dallo stato precedente.
 
+    Applica anche un hard guard di monotonicità: `cases` e `deaths` sono cumulativi
+    epidemiologici e non possono diminuire (anche se l'LLM lo proponesse). `cfr` è
+    sempre ricalcolato da deaths/cases per evitare incoerenze.
+
     NB: NON aggiorna `ts` qui — viene fatto solo in main() dopo aver verificato
     che esistono cambiamenti sostanziali rispetto allo stato precedente.
     """
@@ -255,6 +263,19 @@ def merge_with_prev(new_data, prev_data):
               "new_evacuations", "new_flights", "events"):
         if k not in new_data:
             new_data[k] = prev_data.get(k, [])
+
+    for k in ("cases", "deaths"):
+        prev_v = prev_data.get(k)
+        new_v = new_data.get(k)
+        if isinstance(prev_v, (int, float)) and isinstance(new_v, (int, float)) and new_v < prev_v:
+            log(f"⚠ Hard guard: Ollama ha proposto {k}={new_v} < precedente {prev_v}. Tengo {prev_v}.")
+            new_data[k] = prev_v
+
+    cases = new_data.get("cases")
+    deaths = new_data.get("deaths")
+    if isinstance(cases, (int, float)) and isinstance(deaths, (int, float)) and cases > 0:
+        new_data["cfr"] = round(deaths / cases * 100, 1)
+
     return new_data
 
 
