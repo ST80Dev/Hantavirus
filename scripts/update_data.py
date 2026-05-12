@@ -32,11 +32,19 @@ OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gpt-oss:120b-cloud")
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 
 RSS_FEEDS = [
-    ("WHO DON",         "https://www.who.int/feeds/entity/csr/don/en/rss.xml"),
-    ("ECDC threats",    "https://www.ecdc.europa.eu/en/threats-and-outbreaks/rss.xml"),
-    ("ISS EpiCentro",   "https://www.epicentro.iss.it/rss/rss.xml"),
-    ("ISS news",        "https://www.iss.it/rss"),
-    ("Min. Salute IT",  "https://www.salute.gov.it/portale/news/p3_2_1_1.jsp?menu=notizie&tipo=rss"),
+    # WHO — news EN (include i Disease Outbreak News)
+    ("WHO news EN",          "https://www.who.int/rss-feeds/news-english.xml"),
+    # ECDC — feed news standard (Drupal). Il vecchio /threats-and-outbreaks/rss.xml è 404.
+    ("ECDC news",            "https://www.ecdc.europa.eu/en/news-events/rss.xml"),
+    # ISS EpiCentro — provo path alla radice e tematico (il vecchio /rss/rss.xml è morto)
+    ("ISS EpiCentro",        "https://www.epicentro.iss.it/rss.xml"),
+    ("ISS EpiCentro infett", "https://www.epicentro.iss.it/infettive/rss.xml"),
+    # PAHO — alerts epidemiologici (path Drupal standard)
+    ("PAHO news",            "https://www.paho.org/en/rss.xml"),
+    ("PAHO alerts",          "https://www.paho.org/en/news/rss.xml"),
+    # CDC — Travel Notices (rilevante per outbreak su navi/viaggi) + Newsroom
+    ("CDC Travel notices",   "https://wwwnc.cdc.gov/travel/rss/notices.xml"),
+    ("CDC Newsroom",         "https://tools.cdc.gov/api/v2/resources/media/132608.rss"),
 ]
 
 KEYWORDS = re.compile(
