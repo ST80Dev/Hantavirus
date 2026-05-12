@@ -1,0 +1,328 @@
+{
+  "_doc": "Registro fonti per /aggiorna-hanta. Aggiornato dal command quando scopre fonti nuove.",
+  "_schema": {
+    "trusted": "fonti core sempre consultate ad ogni run; ognuna ha tier 'official' o 'news'",
+    "news_trusted": "fonti giornalistiche affidabili (agenzie stampa, broadcaster, testate sanitarie). Servono a integrare la timeline degli eventi e per arrivare ai numeri quando le fonti ufficiali sono in ritardo. Per i contatori cumulativi (cases/deaths) devono essere CORROBORATE da almeno 1 fonte official.",
+    "candidates": "fonti scoperte durante una ricerca; da promuovere a trusted/news_trusted o rigettare",
+    "blocked": "fonti scartate (paywall, lingua non gestita, qualità insufficiente, 403, ecc.)",
+    "domain_whitelist_official": "domini di organizzazioni ufficiali; una candidate su uno di questi può essere auto-promossa a trusted",
+    "domain_whitelist_news": "domini giornalistici affidabili; una candidate su uno di questi può essere auto-promossa a news_trusted"
+  },
+  "domain_whitelist_official": [
+    "who.int",
+    "ecdc.europa.eu",
+    "iss.it",
+    "epicentro.iss.it",
+    "salute.gov.it",
+    "cdc.gov",
+    "wwwnc.cdc.gov",
+    "paho.org",
+    "rivm.nl",
+    "rki.de",
+    "gov.uk",
+    "santepubliquefrance.fr",
+    "solidarites-sante.gouv.fr",
+    "bag.admin.ch",
+    "sanidad.gob.es",
+    "argentina.gob.ar",
+    "canada.ca",
+    "health.gov.au",
+    "news.un.org",
+    "europa.eu",
+    "civil-protection-humanitarian-aid.ec.europa.eu",
+    "africacdc.org",
+    "mhlw.go.jp",
+    "cda.gov.sg",
+    "doherty.edu.au",
+    "nicd.ac.za"
+  ],
+  "domain_whitelist_news": [
+    "ansa.it", "tg24.sky.it", "ilfattoquotidiano.it", "quotidianosanita.it",
+    "repubblica.it", "corriere.it", "rainews.it", "fnob.it", "trendsanita.it",
+    "osservatoriomalattierare.it",
+    "reuters.com", "apnews.com", "bbc.com", "bbc.co.uk", "cnn.com",
+    "aljazeera.com", "abcnews.com", "abcnews.go.com", "nbcnews.com", "cbsnews.com",
+    "theguardian.com", "ft.com", "nytimes.com", "washingtonpost.com",
+    "usnews.com", "time.com", "livescience.com", "today.com",
+    "lemonde.fr", "lefigaro.fr", "france24.com", "rfi.fr",
+    "elpais.com", "elmundo.es", "abc.es",
+    "spiegel.de", "sueddeutsche.de", "tagesschau.de", "zeit.de",
+    "nrc.nl", "nltimes.nl", "dutchnews.nl", "nos.nl", "volkskrant.nl",
+    "itv.com", "sky.com", "telegraph.co.uk", "independent.co.uk",
+    "euronews.com", "politico.eu",
+    "rte.ie", "irishtimes.com",
+    "ekathimerini.com",
+    "tvn24.pl", "rp.pl",
+    "publico.pt", "rtp.pt",
+    "tagesanzeiger.ch", "nzz.ch", "swissinfo.ch",
+    "clarin.com", "lanacion.com.ar", "infobae.com", "perfil.com",
+    "agenciabrasil.ebc.com.br", "cnnbrasil.com.br", "g1.globo.com",
+    "folha.uol.com.br", "metropoles.com",
+    "biobiochile.cl", "emol.com",
+    "eluniversal.com.mx",
+    "channelnewsasia.com", "straitstimes.com", "mothership.sg",
+    "scmp.com", "asahi.com", "japantimes.co.jp",
+    "koreaherald.com", "koreatimes.co.kr",
+    "thehindu.com", "indianexpress.com",
+    "news24.com", "dailymaverick.co.za", "iol.co.za", "cnbcafrica.com",
+    "cbc.ca", "globalandmail.com", "ctvnews.ca",
+    "abc.net.au", "smh.com.au", "theage.com.au", "news.com.au",
+    "theaustralian.com.au", "thedailyaus.com.au",
+    "nzherald.co.nz", "rnz.co.nz", "stuff.co.nz",
+    "nhk.or.jp", "mainichi.jp", "yomiuri.co.jp", "jiji.com",
+    "kyodonews.net",
+    "decaturish.com", "atlantanewsfirst.com", "wsbtv.com",
+    "11alive.com", "gpb.org", "axios.com", "npr.org",
+    "statnews.com", "thehill.com", "politico.com",
+    "miamiherald.com", "latimes.com", "seattletimes.com",
+    "dailyherald.com",
+    "enca.com", "businesslive.co.za",
+    "theeastafrican.co.ke", "nation.africa", "premiumtimesng.com",
+    "timesofisrael.com", "haaretz.com", "ynetnews.com",
+    "bangkokpost.com", "vnexpress.net",
+    "globaltimes.cn", "xinhuanet.com",
+    "dailysabah.com", "hurriyetdailynews.com"
+  ],
+  "trusted": [
+    {
+      "id": "who-don",
+      "name": "WHO Disease Outbreak News",
+      "url": "https://www.who.int/emergencies/disease-outbreak-news",
+      "lang": "en",
+      "notes": "Bollettini ufficiali outbreak globali. Cerca 'hantavirus', 'Hondius', 'HPS', 'DON5'"
+    },
+    {
+      "id": "ecdc-threats",
+      "name": "ECDC Communicable Disease Threats Report",
+      "url": "https://www.ecdc.europa.eu/en/threats-and-outbreaks/reports-and-data/cdtr-weekly-bulletin",
+      "lang": "en",
+      "notes": "Report settimanale ECDC, sezione 'Hantavirus'"
+    },
+    {
+      "id": "iss-epicentro",
+      "name": "ISS EpiCentro — Hantavirus",
+      "url": "https://www.epicentro.iss.it/hantavirus/",
+      "lang": "it",
+      "notes": "Pagina tematica ISS aggiornata manualmente; controllare 'Aggiornamenti'"
+    },
+    {
+      "id": "min-salute-it",
+      "name": "Ministero Salute IT — Notizie",
+      "url": "https://www.salute.gov.it/portale/news/p3_2_1_1_1.jsp?lingua=italiano&menu=notizie&p=dalministero",
+      "lang": "it",
+      "notes": "Comunicati ministero, filtrare per 'hantavirus' o 'Hondius'"
+    },
+    {
+      "id": "cdc-han",
+      "name": "CDC Health Alert Network",
+      "url": "https://emergency.cdc.gov/han/",
+      "lang": "en",
+      "notes": "Alert sanitari USA; cercare HAN sul tema"
+    },
+    {
+      "id": "cdc-travel",
+      "name": "CDC Travel Health Notices",
+      "url": "https://wwwnc.cdc.gov/travel/notices",
+      "lang": "en",
+      "notes": "Avvisi viaggio (rilevanti per outbreak su nave/voli)"
+    },
+    {
+      "id": "paho-news",
+      "name": "PAHO News",
+      "url": "https://www.paho.org/en/news",
+      "lang": "en",
+      "notes": "Regione Americhe, filtrare per hantavirus"
+    },
+    {
+      "id": "rivm-nl",
+      "name": "RIVM — Hantavirus",
+      "url": "https://www.rivm.nl/hantavirus",
+      "lang": "nl",
+      "notes": "Paesi Bassi (la Hondius batte bandiera NL)"
+    },
+    {
+      "id": "rki-de",
+      "name": "RKI — Hantavirus",
+      "url": "https://www.rki.de/DE/Themen/Infektionskrankheiten/Infektionskrankheiten-A-Z/H/Hantavirus/hantavirus_node.html",
+      "lang": "de",
+      "notes": "Germania, monitoraggio epidemiologico"
+    },
+    {
+      "id": "ukhsa",
+      "name": "UKHSA news",
+      "url": "https://www.gov.uk/government/organisations/uk-health-security-agency/about/news",
+      "lang": "en",
+      "notes": "Regno Unito"
+    },
+    {
+      "id": "santepublique-fr",
+      "name": "Santé Publique France",
+      "url": "https://www.santepubliquefrance.fr/maladies-et-traumatismes/maladies-infectieuses-d-origine-alimentaire/hantaviroses",
+      "lang": "fr",
+      "notes": "Francia — caso Le Bourget marzo 2026"
+    },
+    {
+      "id": "sanidad-es",
+      "name": "Ministerio Sanidad España",
+      "url": "https://www.sanidad.gob.es/profesionales/saludPublica/ccayes/alertasActual/home.htm",
+      "lang": "es",
+      "notes": "Alert sanitari Spagna — Tenerife"
+    },
+    {
+      "id": "bag-ch",
+      "name": "BAG/UFSP Svizzera",
+      "url": "https://www.bag.admin.ch/bag/en/home/krankheiten/krankheiten-im-ueberblick/hantavirus-infektion.html",
+      "lang": "en",
+      "notes": "Svizzera"
+    },
+    {
+      "id": "africa-cdc",
+      "name": "Africa CDC",
+      "url": "https://africacdc.org/news/",
+      "lang": "en",
+      "notes": "Africa CDC, statement multi-country hantavirus"
+    },
+    {
+      "id": "nicd-za",
+      "name": "NICD South Africa",
+      "url": "https://www.nicd.ac.za/",
+      "lang": "en",
+      "notes": "Sudafrica — laboratorio che ha sequenziato Andes virus in 24h"
+    },
+    {
+      "id": "health-gov-au",
+      "name": "Australian Dept. of Health",
+      "url": "https://www.health.gov.au/news",
+      "lang": "en",
+      "notes": "Australia — quarantena Bullsbrook (Perth)"
+    },
+    {
+      "id": "doherty-au",
+      "name": "Doherty Institute (AU)",
+      "url": "https://www.doherty.edu.au/news-events/news",
+      "lang": "en",
+      "notes": "Laboratorio testing PCR Australia"
+    },
+    {
+      "id": "mhlw-jp",
+      "name": "MHLW Giappone",
+      "url": "https://www.mhlw.go.jp/english/",
+      "lang": "en",
+      "notes": "Min. Salute Giappone — 1 passeggero JP a bordo"
+    },
+    {
+      "id": "cda-sg",
+      "name": "CDA Singapore",
+      "url": "https://www.cda.gov.sg/news-and-events/",
+      "lang": "en",
+      "notes": "Communicable Diseases Agency Singapore — 2 residenti SG"
+    },
+    {
+      "id": "phac-ca",
+      "name": "PHAC Canada",
+      "url": "https://www.canada.ca/en/public-health/news.html",
+      "lang": "en",
+      "notes": "Canada — 10 monitorati, 4 evacuati Bagotville→Victoria"
+    },
+    {
+      "id": "msal-ar",
+      "name": "Min. Salud Argentina",
+      "url": "https://www.argentina.gob.ar/salud/noticias",
+      "lang": "es",
+      "notes": "Argentina — paese di origine Andes virus, caso indice"
+    }
+  ],
+  "news_trusted": [
+    {
+      "id": "ansa-mondo",
+      "name": "ANSA — sezione Mondo",
+      "url": "https://www.ansa.it/sito/notizie/mondo/mondo.shtml",
+      "lang": "it",
+      "notes": "Agenzia stampa primaria IT. Spesso anticipa i comunicati ufficiali Min. Salute"
+    },
+    {
+      "id": "skytg24-mondo",
+      "name": "Sky TG24 — Mondo",
+      "url": "https://tg24.sky.it/mondo",
+      "lang": "it",
+      "notes": "Live updates ottimi su outbreak (es. pagina diretta /hantavirus-ultime-notizie-diretta)"
+    },
+    {
+      "id": "quotidiano-sanita",
+      "name": "Quotidiano Sanità",
+      "url": "https://www.quotidianosanita.it/",
+      "lang": "it",
+      "notes": "Testata specifica sanità IT, riporta circolari Min. Salute integrali"
+    },
+    {
+      "id": "ilfatto-cronaca",
+      "name": "Il Fatto Quotidiano — Cronaca",
+      "url": "https://www.ilfattoquotidiano.it/sezione/cronaca/",
+      "lang": "it",
+      "notes": "Copertura italiana approfondita su casi singoli"
+    },
+    {
+      "id": "reuters-health",
+      "name": "Reuters — Health",
+      "url": "https://www.reuters.com/business/healthcare-pharmaceuticals/",
+      "lang": "en",
+      "notes": "Agenzia internazionale, numeri consolidati con timezone chiari"
+    },
+    {
+      "id": "apnews-health",
+      "name": "AP News — Health",
+      "url": "https://apnews.com/hub/health",
+      "lang": "en",
+      "notes": "Wire service, fattuale"
+    },
+    {
+      "id": "bbc-health",
+      "name": "BBC News — Health",
+      "url": "https://www.bbc.com/news/health",
+      "lang": "en",
+      "notes": "Copertura UK + globale. Affidabile per UKHSA e dichiarazioni governo UK"
+    },
+    {
+      "id": "aljazeera-news",
+      "name": "Al Jazeera — News",
+      "url": "https://www.aljazeera.com/news/",
+      "lang": "en",
+      "notes": "Spesso anticipa numeri da fonti regionali (MENA, LatAm)"
+    },
+    {
+      "id": "cnn-health",
+      "name": "CNN — Health",
+      "url": "https://www.cnn.com/health",
+      "lang": "en",
+      "notes": "Live blog su outbreak (es. /2026/05/.../hantavirus-cruise-outbreak)"
+    },
+    {
+      "id": "guardian-health",
+      "name": "The Guardian — Health",
+      "url": "https://www.theguardian.com/society/health",
+      "lang": "en",
+      "notes": "UK, buona copertura europea"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "un-news",
+      "name": "UN News",
+      "url": "https://news.un.org/en/story/2026/05/1167477",
+      "lang": "en",
+      "tier": "official",
+      "notes": "Scoperta 2026-05-12 via WebSearch (storia su evacuazione Tenerife). Ufficiale ONU.",
+      "discovered_at": "2026-05-12",
+      "seen_count": 1
+    }
+  ],
+  "blocked": [
+    {
+      "id": "webfetch-403-batch-1",
+      "domains": ["who.int", "ecdc.europa.eu", "iss.it", "epicentro.iss.it", "salute.gov.it", "cdc.gov", "wwwnc.cdc.gov", "paho.org", "rivm.nl", "rki.de", "gov.uk", "santepubliquefrance.fr", "sanidad.gob.es", "bag.admin.ch"],
+      "reason": "WebFetch restituisce HTTP 403 dal sandbox Claude Code (probabile User-Agent filtering)",
+      "blocked_at": "2026-05-12",
+      "fallback": "usare WebSearch con allowed_domains su questi domini — funziona e restituisce sintesi utili"
+    }
+  ]
+}
