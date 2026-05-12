@@ -116,6 +116,25 @@ giustificate da almeno una fonte ufficiale citata nel buffer:
 - Cita per ogni numero modificato la fonte ufficiale precisa (URL +
   data) nel riassunto a Simone, non nel JSON.
 
+### 4b. Calcolo trend_3d
+
+Prima di salvare, aggiorna il campo `trend_3d` di `new_data`:
+- Lista i file `history/*.json` con `ts` entro 3 giorni dal `new_data.ts`
+- Ordinali per `ts` crescente, scarta gli snapshot dove `cases` è
+  inferiore al massimo già visto (filtro anti-glitch)
+- Prendi il primo rimasto come baseline e calcola:
+  ```json
+  {
+    "from_ts": <baseline.ts>, "to_ts": <new_data.ts>,
+    "cases_delta": new.cases - baseline.cases,
+    "deaths_delta": new.deaths - baseline.deaths,
+    "monitored_delta": new.monitored - baseline.monitored,
+    "window_label": "3gg"
+  }
+  ```
+- Se non ci sono snapshot utili in finestra, ometti il campo
+  (la card frontend mostrerà "—")
+
 ### 5. Validazione
 
 - Salva `new_data` su `data.json` (`Write` o `Edit`)

@@ -26,6 +26,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_PATH = ROOT / "data.json"
+HISTORY_DIR = ROOT / "history"
 
 OLLAMA_URL = "https://ollama.com/v1/chat/completions"
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gpt-oss:120b-cloud")
@@ -290,6 +291,50 @@ def has_substantive_changes(new_data, prev_data):
     return False
 
 
+def compute_trend_3d(current):
+    """Calcola la variazione su finestra mobile di 3 giorni leggendo gli
+    snapshot in history/. Sceglie come baseline il più vecchio entro 3gg
+    e con cases >= max_storico (per ignorare glitch tipo Ollama che
+    abbassa cases di colpo). Ritorna None se non ci sono snapshot utili.
+    """
+    if not HISTORY_DIR.exists():
+        return None
+    current_ts = current.get("ts") or int(time.time() * 1000)
+    three_d_ms = 3 * 24 * 60 * 60 * 1000
+    snapshots = []
+    for fp in sorted(HISTORY_DIR.glob("*.json")):
+        try:
+            d = json.loads(fp.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        ts = d.get("ts")
+        if isinstance(ts, int) and current_ts - three_d_ms <= ts <= current_ts:
+            snapshots.append((ts, d))
+    if not snapshots:
+        return None
+    snapshots.sort()
+    max_cases = 0
+    baseline = None
+    for ts, d in snapshots:
+        c = d.get("cases", 0)
+        if c < max_cases:
+            continue
+        max_cases = max(max_cases, c)
+        if baseline is None:
+            baseline = (ts, d)
+    if baseline is None:
+        return None
+    bt, bd = baseline
+    return {
+        "from_ts": bt,
+        "to_ts": current_ts,
+        "cases_delta": int(current.get("cases", 0)) - int(bd.get("cases", 0)),
+        "deaths_delta": int(current.get("deaths", 0)) - int(bd.get("deaths", 0)),
+        "monitored_delta": int(current.get("monitored", 0)) - int(bd.get("monitored", 0)),
+        "window_label": "3gg",
+    }
+
+
 def main():
     prev_data = json.loads(DATA_PATH.read_text(encoding="utf-8"))
     log(f"Stato precedente: cases={prev_data.get('cases')}, deaths={prev_data.get('deaths')}, "
@@ -315,6 +360,7 @@ def main():
         return 0
 
     new_data["ts"] = int(time.time() * 1000)
+    new_data["trend_3d"] = compute_trend_3d(new_data)
 
     DATA_PATH.write_text(
         json.dumps(new_data, ensure_ascii=False, indent=2) + "\n",
