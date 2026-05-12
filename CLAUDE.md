@@ -25,17 +25,20 @@ ECDC, ISS, CDC per ogni aggiornamento).
 ## Struttura file
 
 ```
-index.html                # Dashboard standalone (~325 KB, ~2400 righe)
+index.html                # Dashboard standalone (~350 KB, ~2400 righe)
                           # D3 + TopoJSON bundled, niente import esterni
-                          # Servita da GitHub Pages (rename da hantavirus_monitor.html)
+                          # Servita da GitHub Pages
 .nojekyll                 # Disattiva processing Jekyll su GitHub Pages
-data.json                 # Stato corrente, generato dal workflow ogni 6h
-.github/workflows/
-  update-data.yml         # Cron 6h + manuale: RSS + Ollama → data.json
+data.json                 # Stato corrente, generato dal command /aggiorna-hanta
+                          # (esecuzione manuale via claude.ai/code)
+sources.json              # Registro fonti (trusted/news_trusted/candidates/blocked)
+                          # consultato e aggiornato dal command /aggiorna-hanta
+.claude/commands/
+  aggiorna-hanta.md       # Slash command per Claude Code: workflow di
+                          # aggiornamento mirato (WebFetch/WebSearch + diff + PR)
 scripts/
-  update_data.py          # Fetch RSS WHO/ECDC/ISS + chiama Ollama Cloud
-  validate_data.py        # Validatore schema (gate finale workflow)
-  requirements.txt        # feedparser, requests
+  validate_data.py        # Validatore schema (gate prima del commit)
+history/                  # Snapshot data.json per audit + trend 3gg
 BRIEFING.md               # Contesto completo del progetto e decisioni prese
 NEWS_UPDATE_2026-05-11.md # Aggiornamenti reali post-creazione dashboard
 ```
@@ -63,28 +66,30 @@ NEWS_UPDATE_2026-05-11.md # Aggiornamenti reali post-creazione dashboard
   overlay rispettivi sulla mappa (chiamate da `initMap` e `refreshMapOverlays`)
 - `refreshMapOverlays()` — ridisegna tutto senza ricreare la SVG (usata dopo
   aggiornamenti dinamici)
-- `fetchUpdate()` — chiama Claude API. **Da rimuovere/sostituire** nel piano
-  migrazione GitHub Pages (vedi BRIEFING.md)
-- `maybeUpdate()` — restore stato dinamico da cache localStorage
+- `fetchUpdate()` — legge `data.json` statico al boot e applica i dati
+- `maybeUpdate()` — restore stato dinamico da cache localStorage, poi chiama `fetchUpdate()`
+- `parseEventDate(s)` — parser date timeline (4 formati IT supportati)
+- `renderTimeline(extra)` — fonde eventi dinamici con BASE_EVENTS, ordina cronologicamente
+- `renderTrendCard(trend_3d)` — popola la quinta stat card con delta 3gg
 
 ## Schema JSON di aggiornamento atteso
 
-Il sistema sa già processare questo schema (in `fetchUpdate`, righe ~1380-1620).
-Quando migri a GitHub Actions, il workflow deve generare lo stesso schema in
-`data.json`:
+Il sistema processa questo schema in `fetchUpdate()` (chiamato al boot dalla
+dashboard). Il command `/aggiorna-hanta` genera `data.json` in questo formato:
 
 ```json
 {
-  "ts": "ISO datetime",
-  "cases": 9, "deaths": 3, "monitored": 147, "cfr": 33.3,
-  "ship": "Tenerife (arrivo confermato 10 mag 2026)",
+  "ts": 1778621709985,
+  "cases": 11, "deaths": 3, "monitored": 159, "cfr": 27.3,
+  "ship": "Tenerife (evacuazione in corso)",
   "defcon": 4,
+  "trend_3d": {"from_ts": ..., "to_ts": ..., "cases_delta": +1, "deaths_delta": 0, "monitored_delta": +12, "window_label": "3gg"},
   "country_updates": [{"iso": "724", "color": "#ef4444", "note": "..."}],
   "new_countries":   [{"iso": "...", "name_it": "...", "color": "...", "note": "...", "lon": 0, "lat": 0, "marker_label": "..."}],
   "route_updates":   [{"lon": 0, "lat": 0, "label": "..."}],
   "new_evacuations": [{"from": [lon,lat], "to": [lon,lat], "label": "..."}],
   "new_flights":     [{"from": [lon,lat], "to": [lon,lat], "label": "..."}],
-  "events":          [{"date": "DD mes YYYY", "text": "...", "type": "c|w|m", "tag": "..."}]
+  "events":          [{"date": "DD mes YYYY", "text": "...", "type": "c|w|m|d", "tag": "..."}]
 }
 ```
 
@@ -108,12 +113,22 @@ Colori validi: `#ef4444` (rosso/confermato), `#f59e0b` (ambra/sospetto),
 WHO DON, ECDC, ISS+EpiCentro, Min. Salute IT, CDC, PAHO, RIVM (NL), RKI (DE),
 UKHSA (UK), SPF (FR), UFSP (CH), Min. Sanidad ES, Min. Salud AR.
 
-## Workflow GitHub Actions — update-data.yml
+## Aggiornamenti — workflow attuale
 
-- Schedulato ogni 6 ore (cron UTC `0 0,6,12,18 * * *` → 02/08/14/20 CEST)
-  + trigger manuale (`workflow_dispatch`)
-- Secret richiesto: `OLLAMA_API_KEY` (Settings → Secrets and variables → Actions)
-- Modello: `gpt-oss:120b-cloud` (override via env `OLLAMA_MODEL` se necessario)
-- Pipeline: RSS fetch → prompt con stato precedente → Ollama → validate → commit
-- Fallback: se validate fallisce, niente commit → dashboard mostra ultimo
-  data.json valido (mai stato rotto)
+Gli aggiornamenti di `data.json` sono **esclusivamente manuali** via il command
+`/aggiorna-hanta` eseguito su [claude.ai/code](https://claude.ai/code) (vedi
+`.claude/commands/aggiorna-hanta.md`).
+
+Pipeline del command:
+1. Legge `data.json` + `sources.json` + `CLAUDE.md`
+2. WebFetch (con fallback WebSearch) su `trusted` (official) + `news_trusted`
+3. Esplora fonti scoperte, aggiorna `sources.json:candidates`
+4. Costruisce diff con guard di monotonicità (cases/deaths solo crescenti)
+5. Calcola `trend_3d` da `history/*.json`
+6. Validazione via `scripts/validate_data.py`
+7. Riepilogo + conferma utente (AskUserQuestion) — **mai commit senza OK**
+8. Branch dedicato `claude/aggiorna-hanta-YYYY-MM-DD-HHMM` + commit + push + PR
+
+**Niente cron, niente Ollama, niente RSS feed**. Il vecchio workflow Actions e
+gli script Ollama sono stati rimossi (commit di cleanup nella PR `claude/
+remove-actions-cron-update-bar`).

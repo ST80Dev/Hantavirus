@@ -821,8 +821,7 @@ footer {
 </header>
 <div id="update-bar">
   <span id="update-icon">●</span>
-  <span id="update-msg">Ultimo aggiornamento: <strong id="last-upd">—</strong> · prossimo controllo tra <strong id="next-upd">—</strong></span>
-  <button onclick="triggerUpdate()" style="margin-left:auto;font-family:var(--font-mo);font-size:12.5px;font-weight:600;background:transparent;border:1px solid var(--border-md);color:var(--text-muted);padding:3px 12px;border-radius:3px;cursor:pointer;">↻ Aggiorna ora</button>
+  <span id="update-msg">Ultimo aggiornamento: <strong id="last-upd">—</strong></span>
 </div>
 
 <!-- ══════════════ STAT CARDS ══════════════ -->
@@ -1057,7 +1056,7 @@ footer {
 
 <!-- FOOTER -->
 <footer>
-  <div class="ft-l">HANTAVIRUS GLOBAL THREAT MONITOR · v3.2 · Auto-aggiornamento ogni 6h via <a href="https://github.com/ST80Dev/Hantavirus" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">GitHub Actions</a> · Fonti ufficiali EU/ITA/INT</div>
+  <div class="ft-l">HANTAVIRUS GLOBAL THREAT MONITOR · v3.3 · Aggiornamenti manuali via <a href="https://github.com/ST80Dev/Hantavirus" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">/aggiorna-hanta</a> · Fonti ufficiali EU/ITA/INT</div>
   <div class="ft-srcs">
     <span class="ftsrc" title="iss.it/-/hantavirus">ISS Italia</span>
     <span class="ftsrc" title="epicentro.iss.it">EpiCentro ISS</span>
@@ -1423,7 +1422,8 @@ function fmtTime(ts) {
   return new Date(ts).toLocaleString('it-IT', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
 }
 /* ────────────────────────────────────────────────
-   AUTO-UPDATE da data.json (generato da GitHub Actions)
+   AUTO-UPDATE da data.json (generato dal command /aggiorna-hanta
+   eseguito manualmente da claude.ai/code; vedi .claude/commands/)
 ──────────────────────────────────────────────── */
 async function fetchUpdate() {
   setUpdateBar('updating', '⟳ Lettura aggiornamenti…');
@@ -1432,7 +1432,7 @@ async function fetchUpdate() {
   try {
     const resp = await fetch('./data.json?t=' + Date.now(), { cache: 'no-store' });
     if (resp.status === 404) {
-      setUpdateBar('error', '⚠ Modalità statica · data.json non ancora generato dal workflow');
+      setUpdateBar('error', '⚠ Modalità statica · data.json non disponibile');
       return;
     }
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -1670,16 +1670,12 @@ async function fetchUpdate() {
     try { localStorage.setItem(CFG.CACHE_KEY, JSON.stringify(cached)); } catch(_) {}
 
     const dataTs = Number.isFinite(parsed.ts) ? parsed.ts : Date.now();
-    setUpdateBar('', `Aggiornato: <strong>${fmtTime(dataTs)}</strong> · sorgente <a href="./data.json" target="_blank" style="color:inherit;text-decoration:underline;">data.json</a>`);
+    setUpdateBar('', `Ultima esecuzione <code style="font-family:var(--font-mo);background:rgba(15,212,164,.08);padding:1px 5px;border-radius:3px;">/aggiorna-hanta</code>: <strong>${fmtTime(dataTs)}</strong>`);
 
   } catch(err) {
     console.warn('[Hanta] Apply update error:', err);
     setUpdateBar('error', `⚠ Errore applicazione dati: ${err.message} · mostro ultimo stato valido`);
   }
-}
-
-async function triggerUpdate() {
-  await fetchUpdate();
 }
 
 /* Decide se fare update o usare cache */
@@ -1784,7 +1780,7 @@ async function maybeUpdate() {
     }
   } catch(_) {}
   // Sempre fetch data.json (file statico, costo ~zero) — sovrascrive la cache se più recente
-  triggerUpdate();
+  await fetchUpdate();
 }
 
 /* ────────────────────────────────────────────────
