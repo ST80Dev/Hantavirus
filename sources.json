@@ -1,0 +1,124 @@
+{
+  "_doc": "Registro fonti per /aggiorna-hanta. Aggiornato dal command quando scopre fonti nuove.",
+  "_schema": {
+    "trusted": "fonti core sempre consultate ad ogni run",
+    "candidates": "fonti scoperte durante una ricerca; da promuovere a trusted o rigettare",
+    "blocked": "fonti scartate (paywall, lingua non gestita, qualità insufficiente, ecc.)",
+    "domain_whitelist": "domini di organizzazioni ufficiali; una candidate su uno di questi può essere auto-promossa"
+  },
+  "domain_whitelist": [
+    "who.int",
+    "ecdc.europa.eu",
+    "iss.it",
+    "epicentro.iss.it",
+    "salute.gov.it",
+    "cdc.gov",
+    "wwwnc.cdc.gov",
+    "paho.org",
+    "rivm.nl",
+    "rki.de",
+    "gov.uk",
+    "santepubliquefrance.fr",
+    "solidarites-sante.gouv.fr",
+    "bag.admin.ch",
+    "sanidad.gob.es",
+    "argentina.gob.ar",
+    "canada.ca",
+    "health.gov.au"
+  ],
+  "trusted": [
+    {
+      "id": "who-don",
+      "name": "WHO Disease Outbreak News",
+      "url": "https://www.who.int/emergencies/disease-outbreak-news",
+      "lang": "en",
+      "notes": "Bollettini ufficiali outbreak globali. Cerca 'hantavirus', 'Hondius', 'HPS', 'DON5'"
+    },
+    {
+      "id": "ecdc-threats",
+      "name": "ECDC Communicable Disease Threats Report",
+      "url": "https://www.ecdc.europa.eu/en/threats-and-outbreaks/reports-and-data/cdtr-weekly-bulletin",
+      "lang": "en",
+      "notes": "Report settimanale ECDC, sezione 'Hantavirus'"
+    },
+    {
+      "id": "iss-epicentro",
+      "name": "ISS EpiCentro — Hantavirus",
+      "url": "https://www.epicentro.iss.it/hantavirus/",
+      "lang": "it",
+      "notes": "Pagina tematica ISS aggiornata manualmente; controllare 'Aggiornamenti'"
+    },
+    {
+      "id": "min-salute-it",
+      "name": "Ministero Salute IT — Notizie",
+      "url": "https://www.salute.gov.it/portale/news/p3_2_1_1_1.jsp?lingua=italiano&menu=notizie&p=dalministero",
+      "lang": "it",
+      "notes": "Comunicati ministero, filtrare per 'hantavirus' o 'Hondius'"
+    },
+    {
+      "id": "cdc-han",
+      "name": "CDC Health Alert Network",
+      "url": "https://emergency.cdc.gov/han/",
+      "lang": "en",
+      "notes": "Alert sanitari USA; cercare HAN sul tema"
+    },
+    {
+      "id": "cdc-travel",
+      "name": "CDC Travel Health Notices",
+      "url": "https://wwwnc.cdc.gov/travel/notices",
+      "lang": "en",
+      "notes": "Avvisi viaggio (rilevanti per outbreak su nave/voli)"
+    },
+    {
+      "id": "paho-news",
+      "name": "PAHO News",
+      "url": "https://www.paho.org/en/news",
+      "lang": "en",
+      "notes": "Regione Americhe, filtrare per hantavirus"
+    },
+    {
+      "id": "rivm-nl",
+      "name": "RIVM — Hantavirus",
+      "url": "https://www.rivm.nl/hantavirus",
+      "lang": "nl",
+      "notes": "Paesi Bassi (la Hondius batte bandiera NL)"
+    },
+    {
+      "id": "rki-de",
+      "name": "RKI — Hantavirus",
+      "url": "https://www.rki.de/DE/Themen/Infektionskrankheiten/Infektionskrankheiten-A-Z/H/Hantavirus/hantavirus_node.html",
+      "lang": "de",
+      "notes": "Germania, monitoraggio epidemiologico"
+    },
+    {
+      "id": "ukhsa",
+      "name": "UKHSA news",
+      "url": "https://www.gov.uk/government/organisations/uk-health-security-agency/about/news",
+      "lang": "en",
+      "notes": "Regno Unito"
+    },
+    {
+      "id": "santepublique-fr",
+      "name": "Santé Publique France",
+      "url": "https://www.santepubliquefrance.fr/maladies-et-traumatismes/maladies-infectieuses-d-origine-alimentaire/hantaviroses",
+      "lang": "fr",
+      "notes": "Francia — caso Le Bourget marzo 2026"
+    },
+    {
+      "id": "sanidad-es",
+      "name": "Ministerio Sanidad España",
+      "url": "https://www.sanidad.gob.es/profesionales/saludPublica/ccayes/alertasActual/home.htm",
+      "lang": "es",
+      "notes": "Alert sanitari Spagna — Tenerife"
+    },
+    {
+      "id": "bag-ch",
+      "name": "BAG/UFSP Svizzera",
+      "url": "https://www.bag.admin.ch/bag/en/home/krankheiten/krankheiten-im-ueberblick/hantavirus-infektion.html",
+      "lang": "en",
+      "notes": "Svizzera"
+    }
+  ],
+  "candidates": [],
+  "blocked": []
+}
