@@ -311,8 +311,78 @@
       "url": "https://news.un.org/en/story/2026/05/1167477",
       "lang": "en",
       "tier": "official",
-      "notes": "Scoperta 2026-05-12 via WebSearch (storia su evacuazione Tenerife). Ufficiale ONU.",
+      "notes": "Scoperta 2026-05-12 via WebSearch (storia su evacuazione Tenerife). Ufficiale ONU. Vista anche nel run 2026-05-13.",
       "discovered_at": "2026-05-12",
+      "seen_count": 2
+    },
+    {
+      "id": "ukhsa-blog",
+      "name": "UKHSA Blog",
+      "url": "https://ukhsa.blog.gov.uk/",
+      "lang": "en",
+      "tier": "official",
+      "notes": "Scoperta 2026-05-13 via WebSearch (post 12 mag su Arrowe Park, 22 evacuati, nessun positivo). Sotto dominio gov.uk, autoritativa.",
+      "discovered_at": "2026-05-13",
+      "seen_count": 1
+    },
+    {
+      "id": "government-nl",
+      "name": "Government.nl - MFA weblog",
+      "url": "https://www.government.nl/latest/weblogs/the-work-of-the-ministry-of-foreign-affairs/2026/medical-evacuation-from-cruise-ship-m-v-hondius",
+      "lang": "en",
+      "tier": "official",
+      "notes": "Scoperta 2026-05-13 via WebSearch (weblog MFA su evacuazione MV Hondius). Portale governo NL.",
+      "discovered_at": "2026-05-13",
+      "seen_count": 1
+    },
+    {
+      "id": "ecdc-andes-page",
+      "name": "ECDC — Andes hantavirus outbreak (page)",
+      "url": "https://www.ecdc.europa.eu/en/infectious-disease-topics/hantavirus-infection/surveillance-and-updates/andes-hantavirus-outbreak",
+      "lang": "en",
+      "tier": "official",
+      "notes": "Scoperta 2026-05-13 via WebSearch. Pagina dedicata ECDC aggiornata 12 mag (11 casi: 9 conf + 2 prob). Sottosezione di ecdc.europa.eu.",
+      "discovered_at": "2026-05-13",
+      "seen_count": 1
+    },
+    {
+      "id": "euronews-health",
+      "name": "Euronews — Health",
+      "url": "https://www.euronews.com/health",
+      "lang": "en",
+      "tier": "news",
+      "notes": "Scoperta 2026-05-13 via WebSearch (live blog su outbreak, 'Spain confirms one new case amongst evacuees'). Pan-european.",
+      "discovered_at": "2026-05-13",
+      "seen_count": 1
+    },
+    {
+      "id": "ilsole24ore",
+      "name": "Il Sole 24 Ore",
+      "url": "https://www.ilsole24ore.com/",
+      "lang": "it",
+      "tier": "news",
+      "notes": "Scoperta 2026-05-13 via WebSearch (articolo su negativo inglese Milano, turista argentina Messina). Mainstream economico IT.",
+      "discovered_at": "2026-05-13",
+      "seen_count": 1
+    },
+    {
+      "id": "open-online",
+      "name": "Open Online",
+      "url": "https://www.open.online/",
+      "lang": "it",
+      "tier": "news",
+      "notes": "Scoperta 2026-05-13 via WebSearch (live blog hantavirus 12 mag, casi sospetti Italia). Testata IT digitale.",
+      "discovered_at": "2026-05-13",
+      "seen_count": 1
+    },
+    {
+      "id": "tgcom24",
+      "name": "TgCom24 Mediaset",
+      "url": "https://www.tgcom24.mediaset.it/",
+      "lang": "it",
+      "tier": "news",
+      "notes": "Scoperta 2026-05-13 via WebSearch (caso calabrese Spallanzani). Mainstream IT.",
+      "discovered_at": "2026-05-13",
       "seen_count": 1
     }
   ],
