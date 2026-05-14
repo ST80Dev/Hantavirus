@@ -341,9 +341,9 @@
       "url": "https://www.ecdc.europa.eu/en/infectious-disease-topics/hantavirus-infection/surveillance-and-updates/andes-hantavirus-outbreak",
       "lang": "en",
       "tier": "official",
-      "notes": "Scoperta 2026-05-13 via WebSearch. Pagina dedicata ECDC aggiornata 12 mag (11 casi: 9 conf + 2 prob). Sottosezione di ecdc.europa.eu.",
+      "notes": "Scoperta 2026-05-13 via WebSearch. Pagina dedicata ECDC aggiornata 14 mag (11 casi: 8 conf + 2 prob + 1 inconclusivo; no nuovi casi/morti). Sottosezione di ecdc.europa.eu.",
       "discovered_at": "2026-05-13",
-      "seen_count": 1
+      "seen_count": 2
     },
     {
       "id": "euronews-health",
